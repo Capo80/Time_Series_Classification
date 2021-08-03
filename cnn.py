@@ -69,20 +69,21 @@ y_tr = y_tr[index_train_mlp,]
 n_classes = 8
 y_tr = tf.keras.utils.to_categorical(y_tr, num_classes=n_classes)
 y_ts = tf.keras.utils.to_categorical(y_ts, num_classes=n_classes)
-input_shape = x_tr.shape
+input_shape = (x_tr.shape[1],x_tr.shape[2])
+print(input_shape)
 
 model = tf.keras.models.Sequential()
 model.add(tf.keras.layers.Conv1D(128, kernel_size=6, activation='relu',padding="same", input_shape=input_shape))
 model.add(tf.keras.layers.Conv1D(128, kernel_size=3, activation='relu',padding="same"))
-model.add(tf.keras.layers.MaxPooling2D(pool_size=2, padding="same"))
+model.add(tf.keras.layers.MaxPooling1D(pool_size=3, padding="same"))
 model.add(tf.keras.layers.BatchNormalization())
 model.add(tf.keras.layers.Conv1D(64, kernel_size=3, activation='relu',padding="same"))
 model.add(tf.keras.layers.Conv1D(64, kernel_size=3, activation='relu',padding="same"))
-model.add(tf.keras.layers.MaxPooling2D(pool_size=2, padding="same"))
+model.add(tf.keras.layers.MaxPooling1D(pool_size=3, padding="same"))
 model.add(tf.keras.layers.BatchNormalization())
 model.add(tf.keras.layers.Conv1D(32, kernel_size=3, activation='relu',padding="same"))
 model.add(tf.keras.layers.Conv1D(32, kernel_size=3, activation='relu',padding="same"))
-model.add(tf.keras.layers.MaxPooling2D(pool_size=2, padding="same"))
+model.add(tf.keras.layers.MaxPooling1D(pool_size=3, padding="same"))
 model.add(tf.keras.layers.Flatten())
 model.add(tf.keras.layers.Dense(128, activation='relu'))
 model.add(tf.keras.layers.Dropout(.45))
@@ -100,7 +101,7 @@ opt = tf.keras.optimizers.Adam()
 #callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=10)
 model.compile(optimizer=opt, loss="categorical_crossentropy", metrics=['accuracy'])
 #history=model.fit(x_tr, y_tr, batch_size=64, epochs=200, validation_data=(x_val, y_val), callbacks=[callback])
-history=model.fit(x_tr, y_tr, batch_size=64, epochs=200)
+history=model.fit(x_tr, y_tr, batch_size=64, epochs=10)
 
 # Validation set not ready yet
 
