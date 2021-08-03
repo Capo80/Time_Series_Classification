@@ -4,6 +4,8 @@ import random
 import glob
 import matplotlib.pyplot as plt
 from utilities import *
+from classifiers import *
+from sklearn.model_selection import KFold
 
 seed = 12345
 np.random.seed(seed)
@@ -72,36 +74,21 @@ y_ts = tf.keras.utils.to_categorical(y_ts, num_classes=n_classes)
 input_shape = (x_tr.shape[1],x_tr.shape[2])
 print(input_shape)
 
-model = tf.keras.models.Sequential()
-model.add(tf.keras.layers.Conv1D(128, kernel_size=6, activation='relu',padding="same", input_shape=input_shape))
-model.add(tf.keras.layers.Conv1D(128, kernel_size=3, activation='relu',padding="same"))
-model.add(tf.keras.layers.MaxPooling1D(pool_size=3, padding="same"))
-model.add(tf.keras.layers.BatchNormalization())
-model.add(tf.keras.layers.Conv1D(64, kernel_size=3, activation='relu',padding="same"))
-model.add(tf.keras.layers.Conv1D(64, kernel_size=3, activation='relu',padding="same"))
-model.add(tf.keras.layers.MaxPooling1D(pool_size=3, padding="same"))
-model.add(tf.keras.layers.BatchNormalization())
-model.add(tf.keras.layers.Conv1D(32, kernel_size=3, activation='relu',padding="same"))
-model.add(tf.keras.layers.Conv1D(32, kernel_size=3, activation='relu',padding="same"))
-model.add(tf.keras.layers.MaxPooling1D(pool_size=3, padding="same"))
-model.add(tf.keras.layers.Flatten())
-model.add(tf.keras.layers.Dense(128, activation='relu'))
-model.add(tf.keras.layers.Dropout(.45))
-model.add(tf.keras.layers.BatchNormalization())
-model.add(tf.keras.layers.Dense(64, activation='relu'))
-model.add(tf.keras.layers.Dropout(.25))
-model.add(tf.keras.layers.BatchNormalization())
-model.add(tf.keras.layers.Dense(32, activation='relu'))
-model.add(tf.keras.layers.Dense(n_classes, activation='softmax'))
 
-print(input_shape)
-model.summary()
+n_split=3
 
-opt = tf.keras.optimizers.Adam()
-#callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=10)
-model.compile(optimizer=opt, loss="categorical_crossentropy", metrics=['accuracy'])
+for train_index,test_index in KFold(n_split).split(x_tr):
+  x_train_fold,x_test_fold=x_tr[train_index],x_tr[test_index]
+  y_train_fold,y_test_fold=y_tr[train_index],y_tr[test_index]
+  
+  model=get_cnn_standard(input_shape, n_classes)
+  callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=10)
+  model.fit(x_train_fold, y_train_fold, batch_size=1, validation_data=(x_test_fold, y_test_fold), epochs=50, callbacks = [callback])
+  
+  print('Model evaluation ', model.evaluate(x_test_fold,y_test_fold))
+
 #history=model.fit(x_tr, y_tr, batch_size=64, epochs=200, validation_data=(x_val, y_val), callbacks=[callback])
-history=model.fit(x_tr, y_tr, batch_size=64, epochs=10)
+#history=model.fit(x_tr, y_tr, batch_size=32, epochs=200)
 
 # Validation set not ready yet
 
@@ -121,7 +108,3 @@ performance = model.evaluate(x_val, y_val, verbose=0)
 print("Validation performance")
 print(performance)
 """
-
-performance = model.evaluate(x_ts, y_ts, verbose=0)
-print("Test performance")
-print(performance)
