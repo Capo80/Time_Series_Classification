@@ -20,10 +20,30 @@ def get_cnn_standard(input_shape, n_classes):
 
 	return model
 
+
+def simple_dnn(input_shape, n_classes):
+	model = tf.keras.models.Sequential()
+	model.add(tf.keras.layers.Flatten(input_shape=input_shape))
+	model.add(tf.keras.layers.Dense(units=315, activation='elu'))
+	model.add(tf.keras.layers.Dense(units=157, activation='elu'))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dense(units=78, activation='elu'))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dropout(0.2))
+	model.add(tf.keras.layers.Dense(units=157, activation='elu'))
+	model.add(tf.keras.layers.Dense(units=315, activation='elu'))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dense(units=n_classes, activation='softmax'))
+	model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+	return model
+
+
 def simple_mlp(input_shape, n_classes):
 	model = tf.keras.models.Sequential()
 	model.add(tf.keras.layers.Flatten(input_shape=input_shape))
-	model.add(tf.keras.layers.Dense(units=315, activation='tanh'))
+	model.add(tf.keras.layers.Dense(units=315, activation='lrelu'))
+	#model.add(tf.keras.layers.Dropout(0.2))
+	model.add(tf.keras.layers.Dense(units=120, activation='lrelu'))
 	model.add(tf.keras.layers.Dropout(0.2))
 	model.add(tf.keras.layers.Dense(units=n_classes, activation='softmax'))
 	model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])

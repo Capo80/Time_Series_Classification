@@ -24,7 +24,20 @@ def setUp():
     (x_tr, y_tr) = getTrainingSet()
     (x_ts, y_ts) = getTestSet()
 
-    # scaling data between 0 and 1
+    # adjusting data, using only 6 digits after 0
+    for i in range(0, x_tr.shape[0]):
+        for j in range(0, x_tr.shape[1]):
+            for k in range(0, x_tr.shape[2]):
+                # if using relu, negative input must be handled
+                x_tr[i][j][k] = float("%.6f"%x_tr[i][j][k])
+
+    for i in range(0, x_ts.shape[0]):
+        for j in range(0, x_ts.shape[1]):
+            for k in range(0, x_ts.shape[2]):
+                # if using relu, negative input must be handled
+                x_ts[i][j][k] = float("%.6f"%x_ts[i][j][k])
+
+    # data augumentation
 
     # one hot encoding
     y_tr = tf.keras.utils.to_categorical(y_tr, num_classes=n_classes)
@@ -43,19 +56,21 @@ def startTraining():
 
     # K-Forld Cross Validation
     n_split=3
-    batch_size=256
+    batch_size=128
     for train_index,test_index in KFold(n_split).split(x_tr):
         x_train_fold,x_val_fold=x_tr[train_index],x_tr[test_index]
         y_train_fold,y_val_fold=y_tr[train_index],y_tr[test_index]
 
         #model = classifiers.get_cnn_standard(input_shape, n_classes)
         #model = classifiers.rest_net(input_shape, n_classes)
-        model = classifiers.simple_mlp(input_shape, n_classes)
+        #model = classifiers.simple_mlp(input_shape, n_classes)
+        model = classifiers.simple_dnn(input_shape, n_classes)
 
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=10)
         history=model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=200, callbacks = [callback])
 
         print('Model evaluation ', model.evaluate(x_val_fold,y_val_fold))
+        break
 
     # summarize history for loss (best result)
     plt.plot(history.history['loss'])
@@ -90,6 +105,7 @@ if __name__ == "__main__":
         choice = int(input("Your choice: "))
 
         if(choice == 1):
+            reload(cnn)
             setUp()
         elif(choice == 2):
             try:
