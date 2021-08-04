@@ -1,17 +1,6 @@
 import numpy as np
 from constants import *
 
-def defineArchitecture(model, modelCode):
-
-    if(modelCode == ARCH1):
-        import file_arch1
-    elif(modelCode == ARCH2):
-        import file_arch2
-    else:
-        print("Model Code not found")
-        exit(-1)
-
-
 def getTrainingSet(perc=0.7):
 
     #training shape will be like (5000, 315, 3)

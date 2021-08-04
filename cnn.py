@@ -1,110 +1,101 @@
 import numpy as np
 import tensorflow as tf
-import random
 import glob
 import matplotlib.pyplot as plt
 from utilities import *
 from classifiers import *
 from sklearn.model_selection import KFold
 
-seed = 12345
-np.random.seed(seed)
-tf.random.set_seed(seed)
-random.seed(seed)
-
-#%cd /content/drive/My\ Drive/Didattica/ML\ 2020-2021\ Deep\ Learning/Esercitazione\ CNN/
-"""
-n_classes = 10
-
-train = np.loadtxt("mnist_rot/mnist_rot_train.amat", dtype='float32')
-test = np.loadtxt("mnist_rot/mnist_rot_test.amat", dtype='float32')
-print(train.shape)
-print(test.shape)
-
-x_tr = train[:, :-1]
-y_tr = train[:, -1]
-x_ts = test[:, :-1]
-y_ts = test[:, -1]
-
-y_tr = tf.keras.utils.to_categorical(y_tr, num_classes=n_classes)
-y_ts = tf.keras.utils.to_categorical(y_ts, num_classes=n_classes)
-
-if tf.keras.backend.image_data_format() == 'channels_first':
-    x_tr = x_tr.reshape(x_tr.shape[0], 1, 28, -1)
-    x_ts = x_ts.reshape(x_ts.shape[0], 1, 28, -1)
-else: # if tf.keras.backend.image_data_format() == 'channels_last'
-    x_tr = x_tr.reshape(x_tr.shape[0], 28, -1, 1)
-    x_ts = x_ts.reshape(x_ts.shape[0], 28, -1, 1)
-
-print(x_tr.shape)
-print(x_ts.shape)
-
-input_shape = (x_tr.shape[1],x_tr.shape[2],x_tr.shape[3])
-print(input_shape)
-
-num_row = 2
-num_col = 5
-# plot images
-fig, axes = plt.subplots(num_row, num_col, figsize=(1.5*num_col,2*num_row))
-for i in range(num_row*num_col):
-    ax = axes[i//num_col, i%num_col]
-    ax.imshow(np.squeeze(x_tr[i]), cmap='gray')
-    ax.set_title('Label: {}'.format(np.where(y_tr[i]==1)[0][0]))
-plt.tight_layout()
-plt.show()
-
-val_dim = int(.3*len(x_tr))
-arr_mlp = np.arange(len(x_tr))
-index_val_mlp = np.random.choice(arr_mlp, val_dim, replace=False)
-index_train_mlp = np.setdiff1d(arr_mlp, index_val_mlp)
-x_val = x_tr[index_val_mlp,]
-y_val = y_tr[index_val_mlp,]
-x_tr = x_tr[index_train_mlp,]
-y_tr = y_tr[index_train_mlp,]
-"""
-
-# retreiving test and training set
-(x_tr, y_tr) = getTrainingSet()
-(x_ts, y_ts) = getTestSet()
-
-# one hot encoding
+# GLOBAL variable
+x_tr = None
+x_ts = None
+y_tr = None
+y_ts = None
 n_classes = 8
-y_tr = tf.keras.utils.to_categorical(y_tr, num_classes=n_classes)
-y_ts = tf.keras.utils.to_categorical(y_ts, num_classes=n_classes)
-input_shape = (x_tr.shape[1],x_tr.shape[2])
-print(input_shape)
+input_shape = None
+model = None
+dataReady = False
+trained  = False
+
+def setUp():
+    global x_tr, y_tr, x_ts, y_ts, input_shape, dataReady
+    # retreiving test and training set
+    (x_tr, y_tr) = getTrainingSet()
+    (x_ts, y_ts) = getTestSet()
+
+    # one hot encoding
+    y_tr = tf.keras.utils.to_categorical(y_tr, num_classes=n_classes)
+    y_ts = tf.keras.utils.to_categorical(y_ts, num_classes=n_classes)
+    input_shape = (x_tr.shape[1],x_tr.shape[2])
+    dataReady = True
 
 
-n_split=3
 
-for train_index,test_index in KFold(n_split).split(x_tr):
-  x_train_fold,x_test_fold=x_tr[train_index],x_tr[test_index]
-  y_train_fold,y_test_fold=y_tr[train_index],y_tr[test_index]
-  
-  model=get_cnn_standard(input_shape, n_classes)
-  callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=10)
-  model.fit(x_train_fold, y_train_fold, batch_size=1, validation_data=(x_test_fold, y_test_fold), epochs=50, callbacks = [callback])
-  
-  print('Model evaluation ', model.evaluate(x_test_fold,y_test_fold))
+def startTraining():
+    global model, trained
 
-#history=model.fit(x_tr, y_tr, batch_size=64, epochs=200, validation_data=(x_val, y_val), callbacks=[callback])
-#history=model.fit(x_tr, y_tr, batch_size=32, epochs=200)
+    if(not dataReady):
+        print("Setup dataset first !")
+        return
 
-# Validation set not ready yet
+    # K-Forld Cross Validation
+    n_split=3
+    perc_batch=0.3
+    for train_index,test_index in KFold(n_split).split(x_tr):
+        x_train_fold,x_val_fold=x_tr[train_index],x_tr[test_index]
+        y_train_fold,y_val_fold=y_tr[train_index],y_tr[test_index]
 
-"""
-# summarize history for loss
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('epoch')
-plt.legend(['train', 'validation'], loc='upper left')
-plt.show()
-"""
+        # retreiving batch size according to train set dimemnsion
+        batch_size = int(perc_batch*x_train_fold.shape[0])
 
-"""
-performance = model.evaluate(x_val, y_val, verbose=0)
-print("Validation performance")
-print(performance)
-"""
+        model=get_cnn_standard(input_shape, n_classes)
+        callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=10)
+        history=model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=50, callbacks = [callback])
+
+        print('Model evaluation ', model.evaluate(x_val_fold,y_val_fold))
+
+    # summarize history for loss (best result)
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'], loc='upper left')
+    plt.show()
+    trained = True
+
+def evaluateOnTestSet():
+
+    if(not trained):
+        print("Train the model first !")
+        return
+
+    # Testing erformance on test set
+    performance = model.evaluate(x_ts, y_ts, verbose=0)
+    print("Test performance")
+    print(performance)
+
+
+if __name__ == "__main__":
+
+    while True:
+        print("1) Setup dataset")
+        print("2) Start Training")
+        print("3) Evaluate model on test set")
+        print("4) Exit")
+
+        choice = int(input("Your choice: "))
+
+        if(choice == 1):
+            setUp()
+        elif(choice == 2):
+            try:
+                startTraining()
+            except:
+                print("Error during training")
+        elif(choice == 3):
+            evaluateOnTestSet()
+        elif(choice == 4):
+            break
+        else:
+            print("What ?")
