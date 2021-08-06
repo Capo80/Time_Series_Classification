@@ -9,111 +9,12 @@ import random
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
 
 # GLOBAL variables
-x_tr = None
-x_ts = None
-y_tr = None
-y_ts = None
-n_classes = 8
-input_shape = None
 model = None
-dataReady = False
-trained  = False
 
 random.seed(123456789)
 
-def setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.3):
-    global x_tr, y_tr, x_ts, y_ts, input_shape, dataReady
-
-    # retreiving test and training set
-    print("Loading Training set")
-    (x_tr, y_tr) = getTrainingSet()
-    print("Loading Test Set")
-    (x_ts, y_ts) = getTestSet()
-
-    print("Adjusting data")
-    # adjusting data, using only 6 digits after 0
-    for i in range(0, x_tr.shape[0]):
-        for j in range(0, x_tr.shape[1]):
-            for k in range(0, x_tr.shape[2]):
-                # if using relu, negative input must be handled
-                x_tr[i][j][k] = float("%.6f"%x_tr[i][j][k])
-
-    for i in range(0, x_ts.shape[0]):
-        for j in range(0, x_ts.shape[1]):
-            for k in range(0, x_ts.shape[2]):
-                # if using relu, negative input must be handled
-                x_ts[i][j][k] = float("%.6f"%x_ts[i][j][k])
-
-    # data augumentation
-    if(dataAugumentationRatio != 0):
-
-        augShape = (int(dataAugumentationRatio*x_tr.shape[0]), x_tr.shape[1], x_tr.shape[2])
-        print("Adding %d Training Set Entries" % augShape[0])
-
-        # creating augumented np array
-        train = np.empty(augShape)
-        train_l = np.empty(augShape[0])
-
-        # populating arrays
-        for i in range(0, augShape[0]):
-            r = random.random()
-            if (infraTimeAcc and r <= infraPerc):
-                start = random.randint(10, augShape[1]-10)
-                end = random.randint(start, augShape[1])
-                interval = int(float(end-start)/2)
-            else:
-                start = 0
-                end = augShape[1]
-
-            posR = random.random()
-            negR = -posR
-            pintR = random.randint(0,3)
-            nintR = -pintR
-            for j in range(start, end):
-                for k in range(0, augShape[2]):
-                    ii = i % (x_tr.shape[0])
-                    if(i%2==0):
-                        # adding an 'accellerated (existing) motion'
-                        if (infraTimeAcc and r <= infraPerc):
-                            if(j <= start+interval):
-                                train[i][j][k] = x_tr[ii][j][k]+(posR+pintR)*int((j)/float(start+interval))
-                            else:
-                                train[i][j][k] = x_tr[ii][j][k]-(posR+pintR)*int((j)/float(start+interval))
-                        else:
-                            train[i][j][k] = x_tr[ii][j][k]+(posR+pintR)
-                    else:
-                        # adding a 'decellerated (existing) motion'
-                        if (infraTimeAcc and r <= infraPerc):
-                            if(j <= start+interval):
-                                train[i][j][k] = x_tr[ii][j][k]+(negR+nintR)*int((j)/float(start+interval))
-                            else:
-                                train[i][j][k] = x_tr[ii][j][k]-(negR+nintR)*int((j)/float(start+interval))
-                        else:
-                            train[i][j][k] = x_tr[ii][j][k]+(negR+nintR)
-                    train_l[i] = y_tr[ii]
-
-        # merging arrays
-        x_tr = np.append(x_tr, train, axis=0)
-        y_tr = np.append(y_tr, train_l, axis=0)
-
-        print("Data augumented, new shape: ", x_tr.shape)
-
-
-
-    # one hot encoding
-    y_tr = tf.keras.utils.to_categorical(y_tr, num_classes=n_classes)
-    y_ts = tf.keras.utils.to_categorical(y_ts, num_classes=n_classes)
-    input_shape = (x_tr.shape[1],x_tr.shape[2])
-    dataReady = True
-
-
-
 def startTraining():
-    global model, trained
-
-    if(not dataReady):
-        print("Setup dataset first !")
-        return
+    global model
 
     # TODO automatic parameter tuning
     # K-Forld Cross Validation with GridSearchCV for Automatic Tuning (not working...)
@@ -160,7 +61,7 @@ def startTraining():
     # KFold for model performances evaluation with best model
     n_split = 10
     n_split=5
-    batch_size=512
+    batch_size=2048 # 0.94, 512 - 0.948, 256 - 0.90, 1024
     for train_index,test_index in KFold(n_split).split(x_tr):
         x_train_fold,x_val_fold=x_tr[train_index],x_tr[test_index]
         y_train_fold,y_val_fold=y_tr[train_index],y_tr[test_index]
@@ -185,14 +86,8 @@ def startTraining():
     plt.legend(['train', 'validation'], loc='upper left')
     plt.show()
 
-    trained = True
-
 
 def evaluateOnTestSet():
-
-    if(not trained):
-        print("Train the model first !")
-        return
 
     # Testing erformance on test set
     performance = model.evaluate(x_ts, y_ts, verbose=0)

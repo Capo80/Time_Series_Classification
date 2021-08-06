@@ -14,11 +14,12 @@ if __name__ == "__main__":
 
         if(choice == 1):
             reload(classifierController)
-            classifierController.setUp(dataAugumentationRatio=8, infraTimeAcc=True, infraPerc=0.2)
+            classifierController.setUp(dataAugumentationRatio=12, infraTimeAcc=True, infraPerc=0.1)
         elif(choice == 2):
             try:
                 # reloading classifier in case of fast modifications
                 reload(classifiers)
+                reload(classifierController)
                 classifierController.startTraining()
             except Exception as e:
                 print(str(e))

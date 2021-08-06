@@ -1,5 +1,51 @@
 import numpy as np
 from constants import *
+import random
+import tensorflow as tf
+
+# GLOBAL variables
+x_tr = None
+x_ts = None
+y_tr = None
+y_ts = None
+n_classes = 8
+input_shape = None
+
+def setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.3):
+    global x_tr, y_tr, x_ts, y_ts, input_shape
+
+    # retreiving test and training set
+    print("Loading Training set")
+    (x_tr, y_tr) = getTrainingSet()
+    print("Loading Test Set")
+    (x_ts, y_ts) = getTestSet()
+
+    # data augumentation
+    if(dataAugumentationRatio != 0):
+        (x_tr, y_tr) = augumentDataset(x_tr, y_tr, infraTimeAcc, infraPerc, dataAugumentationRatio)
+
+
+    # adjusting data, using only 6 digits after 0
+    print("Adjusting data")
+    for i in range(0, x_tr.shape[0]):
+        for j in range(0, x_tr.shape[1]):
+            for k in range(0, x_tr.shape[2]):
+                # if using relu, negative input must be handled
+                x_tr[i][j][k] = float("%.6f"%x_tr[i][j][k])
+
+    for i in range(0, x_ts.shape[0]):
+        for j in range(0, x_ts.shape[1]):
+            for k in range(0, x_ts.shape[2]):
+                # if using relu, negative input must be handled
+                x_ts[i][j][k] = float("%.6f"%x_ts[i][j][k])
+
+
+    # one hot encoding
+    y_tr = tf.keras.utils.to_categorical(y_tr, num_classes=n_classes)
+    y_ts = tf.keras.utils.to_categorical(y_ts, num_classes=n_classes)
+    input_shape = (x_tr.shape[1],x_tr.shape[2])
+    dataReady = True
+
 
 def getTrainingSet(perc=0.7):
 
@@ -57,6 +103,94 @@ def getTestSet(filenameX=None, filenameY=None, filenameZ=None, filnameL=None, pe
     print("Test shape: ", test.shape, "Test label shape: ", test_label.shape)
     return (test, test_label)
 
+
+def augumentDataset(x_tr, y_tr, infraTimeAcc, infraPerc, dataAugumentationRatio):
+
+    # data augumentation
+    blabla = 1
+    augShape = (int(dataAugumentationRatio*x_tr.shape[0]), x_tr.shape[1], x_tr.shape[2])
+    print("Adding %d Training Set Entries" % augShape[0])
+
+    # creating augumented np array
+    train = np.empty(augShape)
+    train_l = np.empty(augShape[0])
+
+    # populating arrays
+    for i in range(0, augShape[0]):
+        r = random.random()
+        if (infraTimeAcc and r <= infraPerc):
+            start = random.randint(10, augShape[1]-20)
+            end = random.randint(start+10, augShape[1]-10)
+            interval = int(float(end-start)/2)
+        else:
+            start = 0
+            end = augShape[1]
+        ii = i % (x_tr.shape[0])
+
+        # fractional part of the acceleration/deceleration modification
+        posR = random.random()
+        negR = -posR
+
+        # integer part of the acceleration/deceletarion modification
+        # acceleration greater than 2 are less likely to happen
+        temp = random.random()
+        if(temp >= 0.9):
+            pintR = 2
+        else:
+            pintR = random.randint(0,1)
+        nintR = -pintR
+        for j in range(0, augShape[1]):
+            for k in range(0, augShape[2]):
+                if(i%2==0):
+                    # adding an 'accellerated (existing) motion'
+                    if (infraTimeAcc and r <= infraPerc):
+                        if (j >= start and j <=end):
+                            if(j <= start+interval):
+                                train[i][j][k] = x_tr[ii][j][k]+(posR+pintR)*(j-start)/float(interval)
+                            else:
+                                train[i][j][k] = x_tr[ii][j][k]-(posR+pintR)*((j-end)/float(interval))
+                        else:
+                            train[i][j][k] = x_tr[ii][j][k]
+                    else:
+                        train[i][j][k] = x_tr[ii][j][k]+(posR+pintR)
+                else:
+                    # adding a 'decellerated (existing) motion'
+                    if (infraTimeAcc and r <= infraPerc):
+                        if (j >= start and j <=end):
+                            if(j <= start+interval):
+                                train[i][j][k] = x_tr[ii][j][k]+(negR+nintR)*(j-start)/float(interval)
+                            else:
+                                train[i][j][k] = x_tr[ii][j][k]-(negR+nintR)*((j-end)/float(interval))
+                        else:
+                            train[i][j][k] = x_tr[ii][j][k]
+                    else:
+                        train[i][j][k] = x_tr[ii][j][k]+(negR+nintR)
+                train_l[i] = y_tr[ii]
+
+        # debug lines, before after delivery
+        """
+        if(infraTimeAcc and r <= infraPerc and blabla <= 1 and i%2 == 0):
+            if(blabla == 1):
+                print()
+                for z in range(0, augShape[1]):
+                    if (z >= start and z <= end):
+                        print("--", z)
+                    else:
+                        print(z)
+                    print(train[i][z][0], train[i][z][1], train[i][z][2])
+                    print("(", x_tr[ii][z][0], x_tr[ii][z][1], x_tr[ii][z][2],")")
+                print(start, interval, end)
+            blabla += 1
+        """
+
+    # merging arrays
+    x_tr = np.append(x_tr, train, axis=0)
+    y_tr = np.append(y_tr, train_l, axis=0)
+
+    print("Data augumented, new shape: ", x_tr.shape)
+
+    return (x_tr, y_tr)
+
+
 if __name__ == "__main__":
-    getTestSet()
-    getTrainingSet()
+    print("Utility file")
