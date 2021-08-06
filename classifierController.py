@@ -60,8 +60,15 @@ def startTraining():
 
     # KFold for model performances evaluation with best model
     n_split = 10
-    n_split=5
-    batch_size=2048 # 0.94, 512 - 0.948, 256 - 0.90, 1024
+    n_split = 5
+    batch_size = 500    # True 0.1 -> 0.9486
+                        # True 0.1 + batch = 100 -> 0.957
+                        # False -> 0.949                            <- OK
+                        # False + Batch=100 ->  0.954
+                        # True 0.01 -> 0.948
+                        # BrustMode 0.1 -> 0.945
+                        # BrustMode 0.01 -> 0.92
+                        # Tune
     for train_index,test_index in KFold(n_split).split(x_tr):
         x_train_fold,x_val_fold=x_tr[train_index],x_tr[test_index]
         y_train_fold,y_val_fold=y_tr[train_index],y_tr[test_index]

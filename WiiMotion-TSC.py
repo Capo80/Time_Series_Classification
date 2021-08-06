@@ -10,11 +10,15 @@ if __name__ == "__main__":
         print("3) Evaluate model on test set")
         print("4) Exit")
 
-        choice = int(input("Your choice: "))
+        try:
+            choice = int(input("Your choice: "))
+        except:
+            print("What ?")
+            continue
 
         if(choice == 1):
             reload(classifierController)
-            classifierController.setUp(dataAugumentationRatio=12, infraTimeAcc=True, infraPerc=0.1)
+            classifierController.setUp(dataAugumentationRatio=20, infraTimeAcc=False, infraPerc=0.1)
         elif(choice == 2):
             try:
                 # reloading classifier in case of fast modifications

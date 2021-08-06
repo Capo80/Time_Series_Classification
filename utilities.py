@@ -115,6 +115,9 @@ def augumentDataset(x_tr, y_tr, infraTimeAcc, infraPerc, dataAugumentationRatio)
     train = np.empty(augShape)
     train_l = np.empty(augShape[0])
 
+    # burst mode
+    burst = False
+
     # populating arrays
     for i in range(0, augShape[0]):
         r = random.random()
@@ -145,10 +148,13 @@ def augumentDataset(x_tr, y_tr, infraTimeAcc, infraPerc, dataAugumentationRatio)
                     # adding an 'accellerated (existing) motion'
                     if (infraTimeAcc and r <= infraPerc):
                         if (j >= start and j <=end):
-                            if(j <= start+interval):
-                                train[i][j][k] = x_tr[ii][j][k]+(posR+pintR)*(j-start)/float(interval)
+                            if burst:
+                                train[i][j][k] = x_tr[ii][j][k]+(posR+pintR)
                             else:
-                                train[i][j][k] = x_tr[ii][j][k]-(posR+pintR)*((j-end)/float(interval))
+                                if(j <= start+interval):
+                                    train[i][j][k] = x_tr[ii][j][k]+(posR+pintR)*(j-start)/float(interval)
+                                else:
+                                    train[i][j][k] = x_tr[ii][j][k]-(posR+pintR)*((j-end)/float(interval))
                         else:
                             train[i][j][k] = x_tr[ii][j][k]
                     else:
@@ -157,10 +163,13 @@ def augumentDataset(x_tr, y_tr, infraTimeAcc, infraPerc, dataAugumentationRatio)
                     # adding a 'decellerated (existing) motion'
                     if (infraTimeAcc and r <= infraPerc):
                         if (j >= start and j <=end):
-                            if(j <= start+interval):
-                                train[i][j][k] = x_tr[ii][j][k]+(negR+nintR)*(j-start)/float(interval)
+                            if burst:
+                                train[i][j][k] = x_tr[ii][j][k]+(negR+nintR)
                             else:
-                                train[i][j][k] = x_tr[ii][j][k]-(negR+nintR)*((j-end)/float(interval))
+                                if(j <= start+interval):
+                                    train[i][j][k] = x_tr[ii][j][k]+(negR+nintR)*(j-start)/float(interval)
+                                else:
+                                    train[i][j][k] = x_tr[ii][j][k]-(negR+nintR)*((j-end)/float(interval))
                         else:
                             train[i][j][k] = x_tr[ii][j][k]
                     else:
