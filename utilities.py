@@ -138,7 +138,7 @@ def augumentDataset(x_tr, y_tr, infraTimeAcc, infraPerc, dataAugumentationRatio)
         # acceleration greater than 2 are less likely to happen
         temp = random.random()
         if(temp >= 0.85):
-            pintR = random.randint(2,5)
+            pintR = random.randint(2,3)
         else:
             pintR = random.randint(0,1)
         nintR = -pintR

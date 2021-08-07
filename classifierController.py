@@ -14,7 +14,7 @@ model = None
 random.seed("ziofester")
 
 def startTraining():
-    global model
+    global model, x_ts, y_ts
 
     # TODO automatic parameter tuning
     # K-Forld Cross Validation with GridSearchCV for Automatic Tuning (not working...)
@@ -58,8 +58,10 @@ def startTraining():
     print('Model evaluation ', model.evaluate(x_val_fold,y_val_fold))
     """
 
+    # use part on test for validation
+    utv = False
+
     # KFold for model performances evaluation with best model
-    n_split = 10
     n_split = 5
     batch_size = 100
     for train_index,test_index in KFold(n_split).split(x_tr):
@@ -76,13 +78,19 @@ def startTraining():
         #model = classifiers.shallow_cnn(input_shape, n_classes)
         #model = classifiers.get_cnn_standard(input_shape, n_classes)
         #model = classifiers.rest_net(input_shape, n_classes)
-
+        if(utv):
+            x_val_fold = x_ts[0:int(0.5*x_ts.shape[0])]
+            y_val_fold = y_ts[0:int(0.5*y_ts.shape[0])]
 
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=10)
         history=model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=200, callbacks = [callback])
 
         print('Model evaluation ', model.evaluate(x_val_fold,y_val_fold))
         break
+
+    if(utv):
+        x_ts = x_ts[int(0.5*x_ts.shape[0]):]
+        y_ts = y_ts[int(0.5*y_ts.shape[0]):]
 
     # summarize history for loss (best result)
     plt.plot(history.history['loss'])

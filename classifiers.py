@@ -51,16 +51,31 @@ def shallow_cnn2(input_shape, n_classes):
 	return model
 
 
-def simple_dnn(input_shape, n_classes):
+def best_simple_dnn(input_shape, n_classes):
 	model = tf.keras.models.Sequential()
 	model.add(tf.keras.layers.Flatten(input_shape=input_shape))
 	model.add(tf.keras.layers.Dense(units=315, activation='relu'))
-	model.add(tf.keras.layers.Dense(units=105, activation='relu'))
-	model.add(tf.keras.layers.BatchNormalization())
-	model.add(tf.keras.layers.Dense(units=50, activation='relu'))
-	model.add(tf.keras.layers.Dropout(0.2))
-	model.add(tf.keras.layers.Dense(units=105, activation='relu'))
 	model.add(tf.keras.layers.Dense(units=315, activation='relu'))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dense(units=315, activation='relu'))
+	model.add(tf.keras.layers.Dropout(0.2))
+	model.add(tf.keras.layers.Dense(units=315, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=315, activation='relu'))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dense(units=n_classes, activation='softmax'))
+	model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+	return model
+
+def simple_dnn(input_shape, n_classes):
+	model = tf.keras.models.Sequential()
+	model.add(tf.keras.layers.Flatten(input_shape=input_shape))
+	model.add(tf.keras.layers.Dense(units=3*315, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=2*315, activation='relu'))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dense(units=315, activation='relu'))
+	model.add(tf.keras.layers.Dropout(0.2))
+	model.add(tf.keras.layers.Dense(units=315, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=3, activation='relu'))
 	model.add(tf.keras.layers.BatchNormalization())
 	model.add(tf.keras.layers.Dense(units=n_classes, activation='softmax'))
 	model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
@@ -71,7 +86,22 @@ def simple_mlp(input_shape, n_classes):
 	model = tf.keras.models.Sequential()
 	model.add(tf.keras.layers.Flatten(input_shape=input_shape))
 	model.add(tf.keras.layers.Dense(units=315, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=157, activation='relu'))
 	model.add(tf.keras.layers.Dense(units=105, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=n_classes, activation='softmax'))
+	opt = tf.keras.optimizers.Adam()
+	model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
+	return model
+
+#0.962
+def best_simple_dnn(input_shape, n_classes):
+	model = tf.keras.models.Sequential()
+	model.add(tf.keras.layers.Flatten(input_shape=input_shape))
+	model.add(tf.keras.layers.Dense(units=3*315, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=2*315, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=315, activation='relu'))
+	#model.add(tf.keras.layers.Dense(units=3, activa0.962tion='relu'))
+	model.add(tf.keras.layers.BatchNormalization())
 	model.add(tf.keras.layers.Dense(units=n_classes, activation='softmax'))
 	opt = tf.keras.optimizers.Adam()
 	model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
