@@ -1,6 +1,7 @@
 import classifierController
 from importlib import reload
 import classifiers
+import traceback
 
 if __name__ == "__main__":
 
@@ -18,7 +19,7 @@ if __name__ == "__main__":
 
         if(choice == 1):
             reload(classifierController)
-            classifierController.setUp(dataAugumentationRatio=20, infraTimeAcc=False, infraPerc=0.1)
+            classifierController.setUp(dataAugumentationRatio=14, infraTimeAcc=True, infraPerc=0.1)
         elif(choice == 2):
             try:
                 # reloading classifier in case of fast modifications
@@ -26,8 +27,7 @@ if __name__ == "__main__":
                 reload(classifierController)
                 classifierController.startTraining()
             except Exception as e:
-                print(str(e))
-                print("Error during training")
+                traceback.print_exc()
         elif(choice == 3):
             classifierController.evaluateOnTestSet()
         elif(choice == 4):

@@ -11,7 +11,7 @@ from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
 # GLOBAL variables
 model = None
 
-random.seed(123456789)
+random.seed("ziofester")
 
 def startTraining():
     global model
@@ -61,22 +61,22 @@ def startTraining():
     # KFold for model performances evaluation with best model
     n_split = 10
     n_split = 5
-    batch_size = 500    # True 0.1 -> 0.9486
-                        # True 0.1 + batch = 100 -> 0.957
-                        # False -> 0.949                            <- OK
-                        # False + Batch=100 ->  0.954
-                        # True 0.01 -> 0.948
-                        # BrustMode 0.1 -> 0.945
-                        # BrustMode 0.01 -> 0.92
-                        # Tune
+    batch_size = 100
     for train_index,test_index in KFold(n_split).split(x_tr):
         x_train_fold,x_val_fold=x_tr[train_index],x_tr[test_index]
         y_train_fold,y_val_fold=y_tr[train_index],y_tr[test_index]
 
-        #model = classifiers.get_cnn_standard(input_shape, n_classes)
-        #model = classifiers.rest_net(input_shape, n_classes)
+        # good ones
         model = classifiers.simple_mlp(input_shape, n_classes)
         #model = classifiers.simple_dnn(input_shape, n_classes)
+        #model = classifiers.super_simple_mlp(input_shape, n_classes)
+
+        # sucking models
+        #model = classifiers.hybrid_restnet(input_shape, n_classes)
+        #model = classifiers.shallow_cnn(input_shape, n_classes)
+        #model = classifiers.get_cnn_standard(input_shape, n_classes)
+        #model = classifiers.rest_net(input_shape, n_classes)
+
 
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=10)
         history=model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=200, callbacks = [callback])

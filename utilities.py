@@ -137,8 +137,8 @@ def augumentDataset(x_tr, y_tr, infraTimeAcc, infraPerc, dataAugumentationRatio)
         # integer part of the acceleration/deceletarion modification
         # acceleration greater than 2 are less likely to happen
         temp = random.random()
-        if(temp >= 0.9):
-            pintR = 2
+        if(temp >= 0.85):
+            pintR = random.randint(2,5)
         else:
             pintR = random.randint(0,1)
         nintR = -pintR
