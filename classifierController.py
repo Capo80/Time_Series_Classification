@@ -86,7 +86,7 @@ def startTraining():
     #training_function = classifiers.shallow_cnn
     #training_function = classifiers.get_cnn_standard
     #training_function = classifiers.rest_net
-    training_function = classifiers.get_cnn_experimental
+    #training_function = classifiers.get_cnn_experimental
 
     last_model_name = training_function.__name__
     for train_index,test_index in KFold(n_split).split(x_tr):

@@ -37,7 +37,7 @@ def setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.3, random=0,
         (x_tr, y_tr) = augumentDataset(x_tr, y_tr, infraTimeAcc, infraPerc, dataAugumentationRatio)
 
 
-    if (approx)
+    if (approx):
         # adjusting data, using only 6 digits after 0
         print("Adjusting data")
         for i in range(0, x_tr.shape[0]):
