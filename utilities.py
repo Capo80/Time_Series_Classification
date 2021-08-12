@@ -18,14 +18,18 @@ def write_line_to_csv(filename, *kargs):
         row = [str(i) for i in kargs]
         spamwriter.writerow(row)
 
-def setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.3):
+def setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.3, random=0):
     global x_tr, y_tr, x_ts, y_ts, input_shape
 
     # retreiving test and training set
-    print("Loading Training set")
-    (x_tr, y_tr) = getTrainingSet()
-    print("Loading Test Set")
-    (x_ts, y_ts) = getTestSet()
+    if (random):
+        print("Loading random Test and Training")
+        (x_tr, y_tr, x_ts, y_ts) = getRandomTestTrain()
+    else:
+        print("Loading Training set")
+        (x_tr, y_tr) = getTrainingSet()
+        print("Loading Test Set")
+        (x_ts, y_ts) = getTestSet()
 
     # data augumentation
     if(dataAugumentationRatio != 0):
@@ -53,6 +57,41 @@ def setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.3):
     input_shape = (x_tr.shape[1],x_tr.shape[2])
     dataReady = True
 
+def getRandomTestTrain(percTest=0.3):
+    train_x = np.loadtxt(open(train_x_filename, "rb"), delimiter=",")
+    train_y = np.loadtxt(open(train_y_filename, "rb"), delimiter=",")
+    train_z = np.loadtxt(open(train_z_filename, "rb"), delimiter=",")
+    train_l = np.loadtxt(open(train_label_filename, "rb"), delimiter=",")
+
+    axis = (train_x, train_y, train_z)
+    samples = int(train_x.shape[0])
+    testSamples = int(percTest*train_x.shape[0])
+    timeUnits = train_x.shape[1]
+
+    train = np.empty(shape=(samples, timeUnits, 3))
+    train_label = np.empty(shape=(samples))
+
+    test = np.empty(shape=(testSamples, timeUnits, 3))
+    test_label = np.empty(shape=(testSamples))
+
+    #fill train set
+    for sample in range(0, samples):
+        for time in range(0, timeUnits):
+            for k in range(0, len(axis)):
+                train[sample][time][k] = (axis[k])[sample][time]
+        train_label[sample] = train_l[sample]
+
+    #randomly remove percTest of train for test
+    for i in range(0, testSamples):
+        random_index = random.randint(0, samples-1-i)
+        test[i] = train[random_index]
+        test_label[i] = train_label[random_index]
+        np.delete(train, random_index)
+        np.delete(train_label, random_index)
+
+    print("Train shape: ", train.shape, "Train label shape: ", train_label.shape)
+    print("Test shape: ", test.shape, "Test label shape: ", test_label.shape)
+    return (train, train_label, test, test_label)
 
 def getTrainingSet(perc=0.7):
 
