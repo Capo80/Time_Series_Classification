@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
         if(choice == 1):
             reload(classifierController)
-            classifierController.setUp(dataAugumentationRatio=20, infraTimeAcc=False, infraPerc=0.1)
+            classifierController.setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.1)
         elif(choice == 2):
             try:
                 # reloading classifier in case of fast modifications

@@ -11,10 +11,13 @@ from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
 # GLOBAL variables
 model = None
 
+average_kfold = 0
+best_model = None
+best_history = None
 random.seed("ziofester")
 
 def startTraining():
-    global model, x_ts, y_ts
+    global model, x_ts, y_ts, best_model, average_kfold, best_history
 
     # TODO automatic parameter tuning
     # K-Forld Cross Validation with GridSearchCV for Automatic Tuning (not working...)
@@ -64,6 +67,8 @@ def startTraining():
     # KFold for model performances evaluation with best model
     n_split = 5
     batch_size = 100
+    best_evaluation = [0, 0]
+    average_kfold = 0
     for train_index,test_index in KFold(n_split).split(x_tr):
         x_train_fold,x_val_fold=x_tr[train_index],x_tr[test_index]
         y_train_fold,y_val_fold=y_tr[train_index],y_tr[test_index]
@@ -83,18 +88,25 @@ def startTraining():
             y_val_fold = y_ts[0:int(0.5*y_ts.shape[0])]
 
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=10)
-        history=model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=200, callbacks = [callback])
+        history = model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=200, callbacks = [callback])
 
-        print('Model evaluation ', model.evaluate(x_val_fold,y_val_fold))
-        break
-
+        evaluation = model.evaluate(x_val_fold,y_val_fold)
+        print(evaluation, best_evaluation)
+        average_kfold += evaluation[1]
+        print('Current model evaluation ', evaluation)
+        if (best_evaluation[1] < evaluation[1]):
+            print("New best model found!!")
+            best_model = model
+            best_history = history
+        
+    average_kfold = average_kfold / n_split
     if(utv):
         x_ts = x_ts[int(0.5*x_ts.shape[0]):]
         y_ts = y_ts[int(0.5*y_ts.shape[0]):]
 
     # summarize history for loss (best result)
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
+    plt.plot(best_history.history['loss'])
+    plt.plot(best_history.history['val_loss'])
     plt.title('model loss')
     plt.ylabel('loss')
     plt.xlabel('epoch')
@@ -104,7 +116,13 @@ def startTraining():
 
 def evaluateOnTestSet():
 
+    # Average during Kfold (expected to be better)
+    print("Average during Kfold: ", average_kfold)
+
+
     # Testing erformance on test set
-    performance = model.evaluate(x_ts, y_ts, verbose=0)
-    print("Test performance")
-    print(performance)
+    performance = best_model.evaluate(x_ts, y_ts, verbose=0)
+    print("Test performance on validation set: ", performance)
+    
+
+
