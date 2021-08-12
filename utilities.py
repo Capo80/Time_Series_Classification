@@ -95,8 +95,8 @@ def getRandomTestTrain(percTest=0.3,seed="42"):
         test[i] = train[random_index]
         #print(random_index)
         test_label[i] = train_label[random_index]
-        np.delete(train, random_index)
-        np.delete(train_label, random_index)
+        train = np.delete(train, random_index, 0)
+        train_label = np.delete(train_label, random_index, 0)
 
     print("Train shape: ", train.shape, "Train label shape: ", train_label.shape)
     print("Test shape: ", test.shape, "Test label shape: ", test_label.shape)
