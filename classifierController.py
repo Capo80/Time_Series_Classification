@@ -7,6 +7,7 @@ from sklearn.model_selection import KFold, GridSearchCV
 import classifiers
 import random
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
+import time, datetime
 
 # GLOBAL variables
 model = None
@@ -14,10 +15,12 @@ model = None
 average_kfold = 0
 best_model = None
 best_history = None
+training_time = 0
+last_model_name = ""
 random.seed("ziofester")
 
 def startTraining():
-    global model, x_ts, y_ts, best_model, average_kfold, best_history
+    global model, x_ts, y_ts, best_model, average_kfold, best_history, training_time, last_model_name
 
     # TODO automatic parameter tuning
     # K-Forld Cross Validation with GridSearchCV for Automatic Tuning (not working...)
@@ -69,23 +72,33 @@ def startTraining():
     batch_size = 100
     best_evaluation = [0, 0]
     average_kfold = 0
+    training_time = 0
+    start_time = time.monotonic()
+    
+    #maybe?
+    training_function = classifiers.get_cnn_experimental
+
+    # good ones
+    #training_function = classifiers.simple_mlp
+    #training_function = classifiers.simple_dnn
+    #training_function = classifiers.super_simple_mlp
+
+    # sucking models
+    #training_function = classifiers.hybrid_restnet
+    #training_function = classifiers.shallow_cnn
+    #training_function = classifiers.get_cnn_standard
+    #training_function = classifiers.rest_net
+
+    last_model_name = training_function.__name__
     for train_index,test_index in KFold(n_split).split(x_tr):
         x_train_fold,x_val_fold=x_tr[train_index],x_tr[test_index]
         y_train_fold,y_val_fold=y_tr[train_index],y_tr[test_index]
 
-        # good ones
-        model = classifiers.simple_mlp(input_shape, n_classes)
-        #model = classifiers.simple_dnn(input_shape, n_classes)
-        #model = classifiers.super_simple_mlp(input_shape, n_classes)
-
-        # sucking models
-        #model = classifiers.hybrid_restnet(input_shape, n_classes)
-        #model = classifiers.shallow_cnn(input_shape, n_classes)
-        #model = classifiers.get_cnn_standard(input_shape, n_classes)
-        #model = classifiers.rest_net(input_shape, n_classes)
         if(utv):
             x_val_fold = x_ts[0:int(0.5*x_ts.shape[0])]
             y_val_fold = y_ts[0:int(0.5*y_ts.shape[0])]
+
+        model = training_function(input_shape, n_classes)
 
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=10)
         history = model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=200, callbacks = [callback])
@@ -98,8 +111,10 @@ def startTraining():
             print("New best model found!!")
             best_model = model
             best_history = history
+            best_evaluation = evaluation
         
     average_kfold = average_kfold / n_split
+    training_time = time.monotonic() - start_time
     if(utv):
         x_ts = x_ts[int(0.5*x_ts.shape[0]):]
         y_ts = y_ts[int(0.5*y_ts.shape[0]):]
@@ -116,6 +131,9 @@ def startTraining():
 
 def evaluateOnTestSet():
 
+    #training time
+    print("Training time: ", training_time)
+
     # Average during Kfold (expected to be better)
     print("Average during Kfold: ", average_kfold)
 
@@ -124,5 +142,7 @@ def evaluateOnTestSet():
     performance = best_model.evaluate(x_ts, y_ts, verbose=0)
     print("Test performance on validation set: ", performance)
     
+    #save results on file
+    write_line_to_csv("results.csv", last_model_name, datetime.datetime.now(), training_time, average_kfold, performance[1])
 
 

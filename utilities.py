@@ -2,6 +2,7 @@ import numpy as np
 from constants import *
 import random
 import tensorflow as tf
+import csv
 
 # GLOBAL variables
 x_tr = None
@@ -10,6 +11,12 @@ y_tr = None
 y_ts = None
 n_classes = 8
 input_shape = None
+
+def write_line_to_csv(filename, *kargs):
+    with open(filename, 'a') as csvfile:
+        spamwriter = csv.writer(csvfile)
+        row = [str(i) for i in kargs]
+        spamwriter.writerow(row)
 
 def setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.3):
     global x_tr, y_tr, x_ts, y_ts, input_shape
