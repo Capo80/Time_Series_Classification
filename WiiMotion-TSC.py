@@ -22,8 +22,14 @@ if __name__ == "__main__":
             reload(classifierController)
             classifierController.setUp(dataAugumentationRatio=20, infraTimeAcc=False, infraPerc=0.1)
         elif(choice == 2):
+            try:
+                seed = int(input("Choose seed: "))
+            except:
+                print("What ?")
+                continue
+
             reload(classifierController)
-            classifierController.setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.1, random=1)    
+            classifierController.setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.1, random=1, seed=seed, approx=0)    
         elif(choice == 3):
             try:
                 # reloading classifier in case of fast modifications

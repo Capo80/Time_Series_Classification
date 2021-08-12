@@ -15,12 +15,13 @@ model = None
 average_kfold = 0
 best_model = None
 best_history = None
+best_evaluation = 0
 training_time = 0
 last_model_name = ""
 random.seed("ziofester")
 
 def startTraining():
-    global model, x_ts, y_ts, best_model, average_kfold, best_history, training_time, last_model_name
+    global model, x_ts, y_ts, best_model, best_evaluation, average_kfold, best_history, training_time, last_model_name
 
     # TODO automatic parameter tuning
     # K-Forld Cross Validation with GridSearchCV for Automatic Tuning (not working...)
@@ -68,8 +69,8 @@ def startTraining():
     utv = False
 
     # KFold for model performances evaluation with best model
-    n_split = 2
-    batch_size = 100
+    n_split = 3
+    batch_size = 200
     best_evaluation = [0, 0]
     average_kfold = 0
     training_time = 0
@@ -85,10 +86,11 @@ def startTraining():
     #training_function = classifiers.shallow_cnn
     #training_function = classifiers.get_cnn_standard
     #training_function = classifiers.rest_net
-    #training_function = classifiers.get_cnn_experimental
+    training_function = classifiers.get_cnn_experimental
 
     last_model_name = training_function.__name__
     for train_index,test_index in KFold(n_split).split(x_tr):
+        #print(train_index, test_index)
         x_train_fold,x_val_fold=x_tr[train_index],x_tr[test_index]
         y_train_fold,y_val_fold=y_tr[train_index],y_tr[test_index]
 
@@ -99,9 +101,9 @@ def startTraining():
         model = training_function(input_shape, n_classes)
 
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=10)
-        history = model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=100, callbacks = [callback])
+        history = model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=10, callbacks = [callback])
 
-        evaluation = model.evaluate(x_val_fold,y_val_fold)
+        evaluation = model.evaluate(x_val_fold,y_val_fold, verbose=0)
         print(evaluation, best_evaluation)
         average_kfold += evaluation[1]
         print('Current model evaluation ', evaluation)
@@ -135,6 +137,8 @@ def evaluateOnTestSet():
     # Average during Kfold (expected to be better)
     print("Average during Kfold: ", average_kfold)
 
+    # Best model performance
+    print("Best model performance: ", best_evaluation)
 
     # Testing erformance on test set
     performance = best_model.evaluate(x_ts, y_ts, verbose=0)

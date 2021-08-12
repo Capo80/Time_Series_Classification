@@ -1,6 +1,7 @@
 import numpy as np
 from constants import *
 import random
+import sklearn
 import tensorflow as tf
 import csv
 
@@ -18,13 +19,13 @@ def write_line_to_csv(filename, *kargs):
         row = [str(i) for i in kargs]
         spamwriter.writerow(row)
 
-def setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.3, random=0):
+def setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.3, random=0, seed=0, approx=1):
     global x_tr, y_tr, x_ts, y_ts, input_shape
 
     # retreiving test and training set
     if (random):
         print("Loading random Test and Training")
-        (x_tr, y_tr, x_ts, y_ts) = getRandomTestTrain()
+        (x_tr, y_tr, x_ts, y_ts) = getRandomTestTrain(seed=seed)
     else:
         print("Loading Training set")
         (x_tr, y_tr) = getTrainingSet()
@@ -36,19 +37,20 @@ def setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.3, random=0)
         (x_tr, y_tr) = augumentDataset(x_tr, y_tr, infraTimeAcc, infraPerc, dataAugumentationRatio)
 
 
-    # adjusting data, using only 6 digits after 0
-    print("Adjusting data")
-    for i in range(0, x_tr.shape[0]):
-        for j in range(0, x_tr.shape[1]):
-            for k in range(0, x_tr.shape[2]):
-                # if using relu, negative input must be handled
-                x_tr[i][j][k] = float("%.6f"%x_tr[i][j][k])
+    if (approx)
+        # adjusting data, using only 6 digits after 0
+        print("Adjusting data")
+        for i in range(0, x_tr.shape[0]):
+            for j in range(0, x_tr.shape[1]):
+                for k in range(0, x_tr.shape[2]):
+                    # if using relu, negative input must be handled
+                    x_tr[i][j][k] = float("%.6f"%x_tr[i][j][k])
 
-    for i in range(0, x_ts.shape[0]):
-        for j in range(0, x_ts.shape[1]):
-            for k in range(0, x_ts.shape[2]):
-                # if using relu, negative input must be handled
-                x_ts[i][j][k] = float("%.6f"%x_ts[i][j][k])
+        for i in range(0, x_ts.shape[0]):
+            for j in range(0, x_ts.shape[1]):
+                for k in range(0, x_ts.shape[2]):
+                    # if using relu, negative input must be handled
+                    x_ts[i][j][k] = float("%.6f"%x_ts[i][j][k])
 
 
     # one hot encoding
@@ -57,7 +59,10 @@ def setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.3, random=0)
     input_shape = (x_tr.shape[1],x_tr.shape[2])
     dataReady = True
 
-def getRandomTestTrain(percTest=0.3):
+def getRandomTestTrain(percTest=0.3,seed="42"):
+
+    random.seed(seed)
+
     train_x = np.loadtxt(open(train_x_filename, "rb"), delimiter=",")
     train_y = np.loadtxt(open(train_y_filename, "rb"), delimiter=",")
     train_z = np.loadtxt(open(train_z_filename, "rb"), delimiter=",")
@@ -81,10 +86,14 @@ def getRandomTestTrain(percTest=0.3):
                 train[sample][time][k] = (axis[k])[sample][time]
         train_label[sample] = train_l[sample]
 
+    # shuffle training set
+    train, train_label = sklearn.utils.shuffle(train, train_label)
+
     #randomly remove percTest of train for test
     for i in range(0, testSamples):
         random_index = random.randint(0, samples-1-i)
         test[i] = train[random_index]
+        #print(random_index)
         test_label[i] = train_label[random_index]
         np.delete(train, random_index)
         np.delete(train_label, random_index)
