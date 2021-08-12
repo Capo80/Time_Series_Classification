@@ -7,7 +7,7 @@ if __name__ == "__main__":
 
     while True:
         print("1) Setup dataset")
-        print("2) Setup dataset (randomize test sample)")
+        print("2) Setup dataset (randomize test selection)")
         print("3) Start Training")
         print("4) Evaluate model on test set")
         print("5) Exit")

@@ -77,8 +77,8 @@ def startTraining():
     start_time = time.monotonic()
     
     # good ones
-    training_function = classifiers.simple_mlp
-    #training_function = classifiers.simple_dnn
+    #training_function = classifiers.simple_mlp
+    training_function = classifiers.simple_dnn
     #training_function = classifiers.super_simple_mlp
 
     # sucking models
@@ -101,7 +101,7 @@ def startTraining():
         model = training_function(input_shape, n_classes)
 
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=10)
-        history = model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=10, callbacks = [callback])
+        history = model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=500, callbacks = [callback])
 
         evaluation = model.evaluate(x_val_fold,y_val_fold, verbose=0)
         print(evaluation, best_evaluation)
