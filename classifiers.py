@@ -3,6 +3,18 @@ import tensorflow as tf
 
 # TODO tune starting momentum & learning ratewith GridSearchCV
 
+def simple_mlp_experimental(input_shape, n_classes):
+	model = tf.keras.models.Sequential()
+	model.add(tf.keras.layers.Flatten(input_shape=input_shape))
+	model.add(tf.keras.layers.Dense(units=16, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=32, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=64, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=n_classes, activation='softmax'))
+	opt = tf.keras.optimizers.Adam()
+	model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
+	return model
+
+
 # this fucking sucks
 def get_cnn_standard(input_shape, n_classes):
 	model = tf.keras.models.Sequential()
@@ -21,13 +33,12 @@ def get_cnn_standard(input_shape, n_classes):
 
 def get_cnn_experimental(input_shape, n_classes):
 	model = tf.keras.models.Sequential()
-	model.add(tf.keras.layers.Conv1D(6, kernel_size=7, activation='sigmoid',padding="valid", input_shape=input_shape))
+	model.add(tf.keras.layers.Conv1D(32, kernel_size=32, activation='relu',padding="same", input_shape=input_shape))
 	model.add(tf.keras.layers.MaxPooling1D(pool_size=3))
-	model.add(tf.keras.layers.Conv1D(12, kernel_size=7, activation='sigmoid',padding="valid"))
+	model.add(tf.keras.layers.Conv1D(32, kernel_size=32, activation='relu',padding="same"))
 	model.add(tf.keras.layers.MaxPooling1D(pool_size=3))
 
 	model.add(tf.keras.layers.Flatten())
-	model.add(tf.keras.layers.Dense(units=12, activation='sigmoid'))
 	model.add(tf.keras.layers.Dense(n_classes, activation='softmax'))
 	opt = tf.keras.optimizers.Adam()
 	model.compile(optimizer=opt, loss="categorical_crossentropy", metrics=['accuracy'])

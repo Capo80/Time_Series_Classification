@@ -6,8 +6,10 @@ from utilities import *
 from sklearn.model_selection import KFold, GridSearchCV
 import classifiers
 import random
+from importlib import reload
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
 import time, datetime
+import parameters
 
 # GLOBAL variables
 model = None
@@ -22,7 +24,7 @@ random.seed("ziofester")
 
 def startTraining():
     global model, x_ts, y_ts, best_model, best_evaluation, average_kfold, best_history, training_time, last_model_name
-
+    reload(parameters)
     # TODO automatic parameter tuning
     # K-Forld Cross Validation with GridSearchCV for Automatic Tuning (not working...)
     """
@@ -69,24 +71,14 @@ def startTraining():
     utv = False
 
     # KFold for model performances evaluation with best model
-    n_split = 3
-    batch_size = 200
+    n_split = parameters.KFOLD_SPLIT
+    batch_size = parameters.BATCH_SIZE
     best_evaluation = [0, 0]
     average_kfold = 0
     training_time = 0
     start_time = time.monotonic()
     
-    # good ones
-    training_function = classifiers.simple_mlp
-    #training_function = classifiers.simple_dnn
-    #training_function = classifiers.super_simple_mlp
-
-    # sucking models
-    #training_function = classifiers.hybrid_restnet
-    #training_function = classifiers.shallow_cnn
-    #training_function = classifiers.get_cnn_standard
-    #training_function = classifiers.rest_net
-    #training_function = classifiers.get_cnn_experimental
+    training_function = parameters.FUNC_NAME
 
     last_model_name = training_function.__name__
     for train_index,test_index in KFold(n_split).split(x_tr):
@@ -100,8 +92,8 @@ def startTraining():
 
         model = training_function(input_shape, n_classes)
 
-        callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=10)
-        history = model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=200, callbacks = [callback])
+        callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=parameters.PATIENCE)
+        history = model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=parameters.EPOCH, callbacks = [callback])
 
         evaluation = model.evaluate(x_val_fold,y_val_fold, verbose=0)
         print(evaluation, best_evaluation)
@@ -145,6 +137,6 @@ def evaluateOnTestSet():
     print("Test performance on validation set: ", performance)
     
     #save results on file
-    write_line_to_csv("results.csv", last_model_name, datetime.datetime.now(), training_time, average_kfold, performance[1])
+    write_line_to_csv("results.csv", last_model_name, datetime.datetime.now(), training_time, average_kfold, performance[1], parameters.AUGMENT, parameters.EPOCH, parameters.BATCH_SIZE, parameters.SEED, parameters.KFOLD_SPLIT, parameters.PATIENCE)
 
 
