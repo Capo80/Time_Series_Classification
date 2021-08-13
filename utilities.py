@@ -4,6 +4,7 @@ import random
 import sklearn
 import tensorflow as tf
 import csv
+import parameters
 
 # GLOBAL variables
 x_tr = None
@@ -59,7 +60,7 @@ def setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.3, random=0,
     input_shape = (x_tr.shape[1],x_tr.shape[2])
     dataReady = True
 
-def getRandomTestTrain(percTest=0.3,seed="42"):
+def getRandomTestTrain(percTest=0.3,seed=parameters.SEED):
 
     random.seed(seed)
 

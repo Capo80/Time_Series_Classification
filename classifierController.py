@@ -77,7 +77,7 @@ def startTraining():
     average_kfold = 0
     training_time = 0
     start_time = time.monotonic()
-    
+
     training_function = parameters.FUNC_NAME
 
     last_model_name = training_function.__name__
@@ -104,7 +104,7 @@ def startTraining():
             best_model = model
             best_history = history
             best_evaluation = evaluation
-        
+
     average_kfold = average_kfold / n_split
     training_time = time.monotonic() - start_time
     if(utv):
@@ -134,9 +134,7 @@ def evaluateOnTestSet():
 
     # Testing erformance on test set
     performance = best_model.evaluate(x_ts, y_ts, verbose=0)
-    print("Test performance on validation set: ", performance)
-    
+    print("Test performance on test set: ", performance)
+
     #save results on file
     write_line_to_csv("results.csv", last_model_name, datetime.datetime.now(), training_time, average_kfold, performance[1], parameters.AUGMENT, parameters.EPOCH, parameters.BATCH_SIZE, parameters.SEED, parameters.KFOLD_SPLIT, parameters.PATIENCE)
-
-

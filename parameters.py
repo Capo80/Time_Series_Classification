@@ -1,13 +1,13 @@
 import classifiers
 
-BATCH_SIZE=50
-AUGMENT=0
-EPOCH=500
+BATCH_SIZE=100
+AUGMENT=14
+EPOCH=100
 SEED=42
-KFOLD_SPLIT = 3
+KFOLD_SPLIT = 5
 PATIENCE = 10
 # good ones
-#FUNC_NAME = classifiers.simple_mlp
+FUNC_NAME = classifiers.simple_mlp
 #FUNC_NAME = classifiers.simple_dnn
 #FUNC_NAME = classifiers.super_simple_mlp
 
@@ -17,4 +17,4 @@ PATIENCE = 10
 #FUNC_NAME = classifiers.shallow_cnn
 #FUNC_NAME = classifiers.get_cnn_standard
 #FUNC_NAME = classifiers.rest_net
-FUNC_NAME = classifiers.get_cnn_experimental
+#FUNC_NAME = classifiers.get_cnn_experimental
