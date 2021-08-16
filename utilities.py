@@ -164,8 +164,11 @@ def augumentDataset(x_tr, y_tr, infraTimeAcc, infraPerc, dataAugumentationRatio)
 
     # data augumentation
     blabla = 1
+    givenAxisAccDec = True
+    givenAxisPerc = 0.2
     augShape = (int(dataAugumentationRatio*x_tr.shape[0]), x_tr.shape[1], x_tr.shape[2])
     print("Adding %d Training Set Entries" % augShape[0])
+
 
     # creating augumented np array
     train = np.empty(augShape)
@@ -201,7 +204,7 @@ def augumentDataset(x_tr, y_tr, infraTimeAcc, infraPerc, dataAugumentationRatio)
         for j in range(0, augShape[1]):
             for k in range(0, augShape[2]):
                 if(i%2==0):
-                    # adding an 'accellerated (existing) motion'
+                    # adding an 'accellerated (existing) motion' on a portion of time
                     if (infraTimeAcc and r <= infraPerc):
                         if (j >= start and j <=end):
                             if burst:
@@ -213,10 +216,29 @@ def augumentDataset(x_tr, y_tr, infraTimeAcc, infraPerc, dataAugumentationRatio)
                                     train[i][j][k] = x_tr[ii][j][k]-(posR+pintR)*((j-end)/float(interval))
                         else:
                             train[i][j][k] = x_tr[ii][j][k]
+                    # adding an 'accellerated (existing) motion' on random axis
+                    elif (r < givenAxisPerc and givenAxisAccDec):
+                        x = random.randint(0,1)
+                        y = random.randint(0,1)
+                        z = random.randint(0,1)
+                        axis = []
+                        if(x):
+                            axis.append(0)
+                        if(y):
+                            axis.append(1)
+                        if(z):
+                            axis.append(2)
+                        for a in axis:
+                            train[i][j][a] = x_tr[ii][j][a]+(posR+pintR)
+                        for k in range(0, 3):
+                            if(k not in axis):
+                                train[i][j][k] = x_tr[ii][j][k]
+                        break
+                    # adding an 'accellerated (existing) motion'
                     else:
                         train[i][j][k] = x_tr[ii][j][k]+(posR+pintR)
                 else:
-                    # adding a 'decellerated (existing) motion'
+                    # adding a 'decellerated (existing) motion'  on a portion of time
                     if (infraTimeAcc and r <= infraPerc):
                         if (j >= start and j <=end):
                             if burst:
@@ -228,9 +250,30 @@ def augumentDataset(x_tr, y_tr, infraTimeAcc, infraPerc, dataAugumentationRatio)
                                     train[i][j][k] = x_tr[ii][j][k]-(negR+nintR)*((j-end)/float(interval))
                         else:
                             train[i][j][k] = x_tr[ii][j][k]
+                    # adding an 'decellerated (existing) motion' on random axis
+                    elif (r < givenAxisPerc and givenAxisPerc):
+                        x = random.randint(0,1)
+                        y = random.randint(0,1)
+                        z = random.randint(0,1)
+                        axis = []
+                        if(x):
+                            axis.append(0)
+                        if(y):
+                            axis.append(1)
+                        if(z):
+                            axis.append(2)
+                        for a in axis:
+                            train[i][j][a] = x_tr[ii][j][a]+(negR+nintR)
+                        for k in range(0, 3):
+                            if(k not in axis):
+                                train[i][j][k] = x_tr[ii][j][k]
+                        break
+                    # adding an 'decellerated (existing) motion'
                     else:
                         train[i][j][k] = x_tr[ii][j][k]+(negR+nintR)
-                train_l[i] = y_tr[ii]
+
+        # adding label
+        train_l[i] = y_tr[ii]
 
         # debug lines, before after delivery
         """
