@@ -2,14 +2,14 @@ import numpy as np
 import tensorflow as tf
 import glob
 import matplotlib.pyplot as plt
-from utilities import *
+from libraries.utilities import *
+from libraries.constants import * 
 from sklearn.model_selection import KFold, GridSearchCV
-import classifiers
-import random
+import random, os, string
 from importlib import reload
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
 import time, datetime
-import parameters
+import libraries.parameters
 
 # GLOBAL variables
 model = None
@@ -24,7 +24,6 @@ random.seed("ziofester")
 
 def startTraining():
     global model, x_ts, y_ts, best_model, best_evaluation, average_kfold, best_history, training_time, last_model_name
-    reload(parameters)
     # TODO automatic parameter tuning
     # K-Forld Cross Validation with GridSearchCV for Automatic Tuning (not working...)
     """
@@ -93,14 +92,15 @@ def startTraining():
         model = training_function(input_shape, n_classes)
 
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=parameters.PATIENCE)
-        history = model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=parameters.EPOCH, callbacks = [callback])
+
+        history = model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=parameters.EPOCH, callbacks = [callback], verbose=0)
 
         evaluation = model.evaluate(x_val_fold,y_val_fold, verbose=0)
-        print(evaluation, best_evaluation)
+        #print(evaluation, best_evaluation)
         average_kfold += evaluation[1]
         print('Current model evaluation ', evaluation)
         if (best_evaluation[0] > evaluation[0]):
-            print("New best model found!!")
+            #print("New best model found!!")
             best_model = model
             best_history = history
             best_evaluation = evaluation
@@ -118,7 +118,7 @@ def startTraining():
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'validation'], loc='upper left')
-    plt.show()
+    #plt.show()
 
 
 def evaluateOnTestSet():
@@ -138,3 +138,10 @@ def evaluateOnTestSet():
 
     #save results on file
     write_line_to_csv("results.csv", last_model_name, datetime.datetime.now(), training_time, average_kfold, performance[1], parameters.AUGMENT, parameters.EPOCH, parameters.BATCH_SIZE, parameters.SEED, parameters.KFOLD_SPLIT, parameters.PATIENCE)
+
+    return (performance, best_model)
+
+def saveLastModel():
+    folder = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
+    os.mkdir(models_path + "/" + folder)
+    best_model.save(models_path + "/" + folder)

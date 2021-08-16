@@ -1,10 +1,10 @@
 import numpy as np
-from constants import *
+from libraries.constants import *
 import random
 import sklearn
 import tensorflow as tf
 import csv
-import parameters
+import libraries.parameters as parameters
 
 # GLOBAL variables
 x_tr = None
@@ -164,7 +164,7 @@ def augumentDataset(x_tr, y_tr, infraTimeAcc, infraPerc, dataAugumentationRatio)
 
     # data augumentation
     blabla = 1
-    givenAxisAccDec = True
+    givenAxisAccDec = False
     givenAxisPerc = 0.2
     augShape = (int(dataAugumentationRatio*x_tr.shape[0]), x_tr.shape[1], x_tr.shape[2])
     print("Adding %d Training Set Entries" % augShape[0])
