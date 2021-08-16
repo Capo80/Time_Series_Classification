@@ -73,7 +73,7 @@ def startTraining():
     # KFold for model performances evaluation with best model
     n_split = parameters.KFOLD_SPLIT
     batch_size = parameters.BATCH_SIZE
-    best_evaluation = [0, 0]
+    best_evaluation = [1000, 0]
     average_kfold = 0
     training_time = 0
     start_time = time.monotonic()
@@ -99,7 +99,7 @@ def startTraining():
         print(evaluation, best_evaluation)
         average_kfold += evaluation[1]
         print('Current model evaluation ', evaluation)
-        if (best_evaluation[1] < evaluation[1]):
+        if (best_evaluation[0] > evaluation[0]):
             print("New best model found!!")
             best_model = model
             best_history = history

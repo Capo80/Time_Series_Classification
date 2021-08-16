@@ -33,10 +33,10 @@ def get_cnn_standard(input_shape, n_classes):
 
 def get_cnn_experimental(input_shape, n_classes):
 	model = tf.keras.models.Sequential()
-	model.add(tf.keras.layers.Conv1D(32, kernel_size=32, activation='relu',padding="same", input_shape=input_shape))
-	model.add(tf.keras.layers.MaxPooling1D(pool_size=3))
-	model.add(tf.keras.layers.Conv1D(32, kernel_size=32, activation='relu',padding="same"))
-	model.add(tf.keras.layers.MaxPooling1D(pool_size=3))
+	model.add(tf.keras.layers.Conv1D(16, kernel_size=40, activation='sigmoid',padding="same", input_shape=input_shape))
+	model.add(tf.keras.layers.MaxPooling1D(pool_size=2))
+	model.add(tf.keras.layers.Conv1D(32, kernel_size=40, activation='sigmoid',padding="same"))
+	model.add(tf.keras.layers.MaxPooling1D(pool_size=2))
 
 	model.add(tf.keras.layers.Flatten())
 	model.add(tf.keras.layers.Dense(n_classes, activation='softmax'))
@@ -48,7 +48,7 @@ def get_cnn_experimental(input_shape, n_classes):
 
 def shallow_cnn(input_shape, n_classes):
 	model = tf.keras.models.Sequential()
-	model.add(tf.keras.layers.Conv1D(6, kernel_size=105, activation='relu',padding="same", input_shape=input_shape))
+	model.add(tf.keras.layers.Conv1D(16, kernel_size=105, activation='relu',padding="same", input_shape=input_shape))
 	model.add(tf.keras.layers.MaxPooling1D(pool_size=3))
 	model.add(tf.keras.layers.BatchNormalization())
 
