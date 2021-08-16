@@ -1,6 +1,8 @@
 import libraries.classifierController
 import libraries.classifiers
 import libraries.parameters
+from libraries.constants import *
+import random,string,os,time
 from importlib import reload
 
 def train_and_evaluate():
@@ -22,6 +24,8 @@ for i in range(0, 20):
 		best_evaluation = curr_evaluation
 		best_model = curr_model
 
+print("Best Model at the end is: ", best_evaluation)
+random.seed(time.time())
 folder = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
 os.mkdir(models_path + "/" + folder)
 best_model.save(models_path + "/" + folder)
