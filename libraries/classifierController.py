@@ -7,13 +7,16 @@ from libraries.constants import *
 from sklearn.model_selection import KFold, GridSearchCV
 import random, os, string
 from importlib import reload
+from sklearn.metrics import accuracy_score
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
 import time, datetime
 import libraries.parameters
+from itertools import combinations
 
 # GLOBAL variables
 model = None
 
+ensamble_models = []
 average_kfold = 0
 best_model = None
 best_history = None
@@ -21,9 +24,11 @@ best_evaluation = 0
 training_time = 0
 last_model_name = ""
 random.seed("ziofester")
+best_ensamble = []
 
 def startTraining():
     global model, x_ts, y_ts, best_model, best_evaluation, average_kfold, best_history, training_time, last_model_name
+    #reload(parameters)
     # TODO automatic parameter tuning
     # K-Forld Cross Validation with GridSearchCV for Automatic Tuning (not working...)
     """
@@ -77,6 +82,7 @@ def startTraining():
     training_time = 0
     start_time = time.monotonic()
 
+    #print(parameters.BATCH_SIZE)
     training_function = parameters.FUNC_NAME
 
     last_model_name = training_function.__name__
@@ -120,6 +126,87 @@ def startTraining():
     plt.legend(['train', 'validation'], loc='upper left')
     #plt.show()
 
+def ensambleStartTraining():
+    global ensamble_models, x_ts, y_ts, best_model, best_evaluation, average_kfold, best_history, training_time, last_model_name
+    reload(parameters)
+
+    # KFold for model performances evaluation with best model
+    n_split = parameters.KFOLD_SPLIT
+    batch_size = parameters.BATCH_SIZE
+    best_evaluation = [1000, 0]
+    average_kfold = 0
+    training_time = 0
+    start_time = time.monotonic()
+
+    #print(parameters.BATCH_SIZE)
+    training_function = parameters.FUNC_NAME
+
+    last_model_name = training_function.__name__
+    n_models = 5
+    for ind in range(0, n_models):
+        ens_size = int(x_tr.shape[0]/n_classes)
+        ens_dataset_x = x_tr[ind * ens_size: (ind+1) * ens_size]
+        ens_dataset_y = y_tr[ind * ens_size: (ind+1) * ens_size]
+        
+        val_size = int(ens_dataset_x.shape[0]*0.2)
+        ens_train_x = ens_dataset_x[val_size:]
+        ens_train_y = ens_dataset_y[val_size:]
+        ens_val_x = ens_dataset_x[:val_size]
+        ens_val_y = ens_dataset_y[:val_size]
+        
+        model = training_function(input_shape, n_classes)
+
+        callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=parameters.PATIENCE)
+
+        history = model.fit(ens_train_x, ens_train_y, batch_size=batch_size, validation_data=(ens_val_x, ens_val_y), epochs=parameters.EPOCH, callbacks = [callback], verbose=1)
+
+        evaluation = model.evaluate(ens_val_x,ens_val_y, verbose=0)
+
+        ensamble_models.append(model)
+
+        print("Current evaluation: ", evaluation)
+
+    training_time = time.monotonic() - start_time
+
+    # summarize history for loss (best result)
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'], loc='upper left')
+    #plt.show()
+
+def ensambleEvaluate():
+
+    global best_ensamble
+    best_evaluation = 0
+
+    for model in ensamble_models:
+        print("Single model prediction: ", model.evaluate(x_ts, y_ts, verbose=0))
+
+    for i in range(2, len(ensamble_models)+1):
+        for comb in combinations(ensamble_models, i):
+            yhats = [model.predict(x_ts) for model in comb]
+            yhats = np.array(yhats)
+            # sum across ensemble members
+            summed = np.sum(yhats, axis=0)
+            # argmax across classes
+            result = np.argmax(summed, axis=1)
+
+            result = tf.keras.utils.to_categorical(result, num_classes=n_classes)
+
+            curr_evaluation = accuracy_score(y_ts, result)
+            print("Ensamble accuracy: ",curr_evaluation )
+
+            if curr_evaluation > best_evaluation:
+                best_evaluation = curr_evaluation
+                best_ensamble = comb
+    print("Best evaluation: ", best_evaluation)
+
+    #save results on file
+    write_line_to_csv("results.csv", last_model_name, datetime.datetime.now(), training_time, "ensamble", best_evaluation, parameters.AUGMENT, parameters.EPOCH, parameters.BATCH_SIZE, parameters.SEED, parameters.KFOLD_SPLIT, parameters.PATIENCE)
+
 
 def evaluateOnTestSet():
 
@@ -145,3 +232,10 @@ def saveLastModel():
     folder = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
     os.mkdir(models_path + "/" + folder)
     best_model.save(models_path + "/" + folder)
+
+def saveEnsamble():
+    folder = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
+    os.mkdir(models_path + "/" + folder)
+    for i in range(0, len(best_ensamble)):
+        os.mkdir(models_path + "/" + folder + "/model" + str(i))
+        ensamble_models[i].save(models_path + "/" + folder + "/model" + str(i))

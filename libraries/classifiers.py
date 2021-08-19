@@ -3,14 +3,30 @@ import tensorflow as tf
 
 # TODO tune starting momentum & learning ratewith GridSearchCV
 
+# the most promising
+def simple_mlp_experimental2(input_shape, n_classes):
+	model = tf.keras.models.Sequential()
+	model.add(tf.keras.layers.Flatten(input_shape=input_shape))
+	model.add(tf.keras.layers.Dense(units=200, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=100, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=50, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=n_classes, activation='softmax'))
+	opt = tf.keras.optimizers.Adam()
+	model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
+	return model
+
 def simple_mlp_experimental(input_shape, n_classes):
 	model = tf.keras.models.Sequential()
 	model.add(tf.keras.layers.Flatten(input_shape=input_shape))
-	model.add(tf.keras.layers.Dense(units=16, activation='relu'))
-	model.add(tf.keras.layers.Dense(units=32, activation='relu'))
-	model.add(tf.keras.layers.Dense(units=64, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=1800, activation='relu'))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dense(units=900, activation='relu'))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dense(units=450, activation='relu'))
+	model.add(tf.keras.layers.BatchNormalization())
 	model.add(tf.keras.layers.Dense(units=n_classes, activation='softmax'))
-	opt = tf.keras.optimizers.Adam()
+	#opt = tf.keras.optimizers.Adam(lr=0.40)
+	opt = tf.keras.optimizers.SGD(lr=0.30, momentum=0.9, nesterov=True)
 	model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
 	return model
 
