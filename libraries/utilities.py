@@ -101,6 +101,16 @@ def getRandomTestTrain(percTest=0.3,seed=parameters.SEED):
 
     print("Train shape: ", train.shape, "Train label shape: ", train_label.shape)
     print("Test shape: ", test.shape, "Test label shape: ", test_label.shape)
+
+    # USED ONLY TO DEBUG Evaluation Procedure made by the teacher, set to False
+    saveTestSet = False
+    # writing test set into a file
+    if(saveTestSet):
+        np.savetxt(test_x_filename, [ [test[i][j][0] for j in range(0,test.shape[1])] for i in range(0, test.shape[0]) ], delimiter=",", fmt="%s")
+        np.savetxt(test_y_filename, [ [test[i][j][1] for j in range(0,test.shape[1])] for i in range(0, test.shape[0]) ], delimiter=",", fmt="%s")
+        np.savetxt(test_z_filename, [ [test[i][j][2] for j in range(0,test.shape[1])] for i in range(0, test.shape[0]) ], delimiter=",", fmt="%s")
+        np.savetxt(test_label_filename, test_label, delimiter=",", fmt="%i")
+
     return (train, train_label, test, test_label)
 
 def getTrainingSet(perc=0.7):
@@ -129,18 +139,39 @@ def getTrainingSet(perc=0.7):
     return (train, train_label)
 
 
-def getTestSet(filenameX=None, filenameY=None, filenameZ=None, filnameL=None, perc=0.3):
+def loadTSFile():
+    test_x = np.loadtxt(open(test_x_filename, "rb"), delimiter=",")
+    test_y = np.loadtxt(open(test_y_filename, "rb"), delimiter=",")
+    test_z = np.loadtxt(open(test_z_filename, "rb"), delimiter=",")
+    test_l = np.loadtxt(open(test_label_filename, "rb"), delimiter=",")
 
-    if(filenameX != None and filenameY != None and filenameZ != None and filenameL != None):
-        test_x = np.loadtxt(open(filenameX, "rb"), delimiter=",")
-        test_y = np.loadtxt(open(filenameY, "rb"), delimiter=",")
-        test_z = np.loadtxt(open(filenameZ, "rb"), delimiter=",")
-        test_l = np.loadtxt(open(filenameL, "rb"), delimiter=",")
-    else:
-        test_x = np.loadtxt(open(train_x_filename, "rb"), delimiter=",")
-        test_y = np.loadtxt(open(train_y_filename, "rb"), delimiter=",")
-        test_z = np.loadtxt(open(train_z_filename, "rb"), delimiter=",")
-        test_l = np.loadtxt(open(train_label_filename, "rb"), delimiter=",")
+    axis = (test_x, test_y, test_z)
+    samples = int(test_x.shape[0])
+    timeUnits = test_x.shape[1]
+
+    test = np.empty(shape=(samples, timeUnits, 3))
+    test_label = np.empty(shape=(samples))
+
+    # populating test set
+    for sample in range(0, samples):
+        for time in range(0, timeUnits):
+            for k in range(0, len(axis)):
+                test[test_x.shape[0]-sample-1][time][k] = (axis[k])[sample][time]
+        test_label[test_x.shape[0]-sample-1] = test_l[sample]
+
+    test_label = tf.keras.utils.to_categorical(test_label, num_classes=n_classes)
+    dataReady = True
+
+    print("Test shape: ", test.shape, "Test label shape: ", test_label.shape)
+    return (test, test_label)
+
+
+def getTestSet(perc=0.3):
+
+    test_x = np.loadtxt(open(train_x_filename, "rb"), delimiter=",")
+    test_y = np.loadtxt(open(train_y_filename, "rb"), delimiter=",")
+    test_z = np.loadtxt(open(train_z_filename, "rb"), delimiter=",")
+    test_l = np.loadtxt(open(train_label_filename, "rb"), delimiter=",")
 
     axis = (test_x, test_y, test_z)
     samples = int(perc*test_x.shape[0])

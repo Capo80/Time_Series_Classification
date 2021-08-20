@@ -10,12 +10,14 @@ if __name__ == "__main__":
         print("1) Setup dataset")
         print("2) Setup dataset (randomize test selection)")
         print("3) Start Training")
-        print("4) Evaluate model on test set")        
-        print("5) Start Ensamble Training")
-        print("6) Evaluate Ensable model on test set")
-        print("7) Save Model to file")
-        print("8) Save Ensamble")
-        print("9) Exit")
+        print("4) Load TestSet from file")
+        print("5) Evaluate best model on test set")
+        print("6) Start Ensamble Training")
+        print("7) Evaluate Ensable model on test set")
+        print("8) Save Model to file")
+        print("9) Load Best Model")
+        print("10) Save Ensamble")
+        print("11) Exit")
 
         try:
             choice = int(input("Your choice: "))
@@ -28,7 +30,7 @@ if __name__ == "__main__":
             libraries.classifierController.setUp(dataAugumentationRatio=AUGMENT, infraTimeAcc=False, infraPerc=0.1)
         elif(choice == 2):
             reload(libraries.classifierController)
-            libraries.classifierController.setUp(dataAugumentationRatio=AUGMENT, infraTimeAcc=False, infraPerc=0.1, random=1, seed=SEED, approx=0)    
+            libraries.classifierController.setUp(dataAugumentationRatio=AUGMENT, infraTimeAcc=False, infraPerc=0.1, random=1, seed=SEED, approx=0)
         elif(choice == 3):
             try:
                 # reloading classifier in case of fast modifications
@@ -38,8 +40,10 @@ if __name__ == "__main__":
             except Exception as e:
                 traceback.print_exc()
         elif(choice == 4):
-            libraries.classifierController.evaluateOnTestSet()
+            libraries.classifierController.loadTestSetFromFile()
         elif(choice == 5):
+            libraries.classifierController.evaluateOnTestSet()
+        elif(choice == 6):
             try:
                 # reloading classifier in case of fast modifications
                 reload(libraries.classifiers)
@@ -47,13 +51,15 @@ if __name__ == "__main__":
                 libraries.classifierController.ensambleStartTraining()
             except Exception as e:
                 traceback.print_exc()
-        elif(choice == 6):
-            libraries.classifierController.ensambleEvaluate()
         elif(choice == 7):
-            libraries.classifierController.saveLastModel()
+            libraries.classifierController.ensambleEvaluate()
         elif(choice == 8):
-            libraries.classifierController.saveEnsamble()
+            libraries.classifierController.saveLastModel()
         elif(choice == 9):
+            libraries.classifierController.loadEnsamble()
+        elif(choice == 10):
+            libraries.classifierController.saveEnsamble()
+        elif(choice == 11):
             break
         else:
             print("What ?")
