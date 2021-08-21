@@ -60,6 +60,25 @@ def setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.3, random=0,
     input_shape = (x_tr.shape[1],x_tr.shape[2])
     dataReady = True
 
+def hasNoise(data):
+    # data shape: (315, 3)
+    tol = 10
+    noiceDetect = 5
+    currNoise = 0
+    for i in range(0, data.shape[0]):
+        if(currNoise >= tol):
+            return True
+        if(data[i][0] >= noiceDetect or data[i][0] <= -noiceDetect):
+            currNoise+=1
+            continue
+        if(data[i][1] >= noiceDetect or data[i][1] <= -noiceDetect):
+            currNoise+=1
+            continue
+        if(data[i][2] >= noiceDetect or data[i][2] <= -noiceDetect):
+            currNoise+=1
+            continue
+    return False
+
 def getRandomTestTrain(percTest=0.3,seed=parameters.SEED):
 
     random.seed(seed)
@@ -89,7 +108,6 @@ def getRandomTestTrain(percTest=0.3,seed=parameters.SEED):
 
     # shuffle training set
     train, train_label = sklearn.utils.shuffle(train, train_label, random_state=parameters.SEED)
-
     #randomly remove percTest of train for test
     for i in range(0, testSamples):
         random_index = random.randint(0, samples-1-i)
@@ -99,6 +117,30 @@ def getRandomTestTrain(percTest=0.3,seed=parameters.SEED):
         train = np.delete(train, random_index, 0)
         train_label = np.delete(train_label, random_index, 0)
 
+    # clean noise ONLY from TRAINING !
+    noTrainNoise = False
+    trainNoiseCancPerc = 1
+    noiseDeleted = 0
+    totNoise = 0
+
+    # TODO: 0.5-; 1-; augument no noised+-; augument no noised + 0.5;
+
+    if(noTrainNoise):
+        print("Removing noise from training set")
+        for sample in range(0, train.shape[0]):
+            try:
+                noised = hasNoise(train[sample])
+            except:
+                # samples finished
+                break
+            if(noised):
+                totNoise+=1
+                if(random.random() <= trainNoiseCancPerc):
+                    train = np.delete(train, sample, 0)
+                    train_label = np.delete(train_label, sample, 0)
+                    noiseDeleted+=1
+        print("Total sample with noise deleted: ", noiseDeleted, "(on {} total noised sample)".format(totNoise))
+        
     print("Train shape: ", train.shape, "Train label shape: ", train_label.shape)
     print("Test shape: ", test.shape, "Test label shape: ", test_label.shape)
 
