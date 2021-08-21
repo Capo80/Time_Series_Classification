@@ -92,7 +92,7 @@ def shallow_cnn2(input_shape, n_classes):
 	return model
 
 
-def best_simple_dnn(input_shape, n_classes):
+def simple_dnn(input_shape, n_classes):
 	model = tf.keras.models.Sequential()
 	model.add(tf.keras.layers.Flatten(input_shape=input_shape))
 	model.add(tf.keras.layers.Dense(units=315, activation='relu'))
@@ -107,7 +107,7 @@ def best_simple_dnn(input_shape, n_classes):
 	model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 	return model
 
-def simple_dnn(input_shape, n_classes):
+def simple_dnn_2(input_shape, n_classes):
 	model = tf.keras.models.Sequential()
 	model.add(tf.keras.layers.Flatten(input_shape=input_shape))
 	model.add(tf.keras.layers.Dense(units=3*315, activation='relu'))

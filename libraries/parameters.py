@@ -1,14 +1,14 @@
 import libraries.classifiers as cc
 
-BATCH_SIZE=300
-AUGMENT=0
-EPOCH=500
+BATCH_SIZE=150
+AUGMENT=20
+EPOCH=200
 SEED=42
 KFOLD_SPLIT = 5
 PATIENCE = 10
 # good ones
-FUNC_NAME = cc.simple_mlp
-#FUNC_NAME = cc.simple_dnn
+#FUNC_NAME = cc.simple_mlp
+FUNC_NAME = cc.simple_dnn
 #FUNC_NAME = cc.super_simple_mlp
 
 # sucking models

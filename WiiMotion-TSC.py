@@ -11,7 +11,7 @@ if __name__ == "__main__":
         print("2) Setup dataset (randomize test selection)")
         print("3) Start Training")
         print("4) Load TestSet from file")
-        print("5) Evaluate best model on test set")
+        print("5) Evaluate model on test set")
         print("6) Start Ensamble Training")
         print("7) Evaluate Ensable model on test set")
         print("8) Save Model to file")

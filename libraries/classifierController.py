@@ -91,7 +91,7 @@ def startTraining():
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'validation'], loc='upper left')
-    #plt.show()
+    plt.show()
 
 def ensambleStartTraining():
     global ensamble_models, x_ts, y_ts, best_model, best_evaluation, average_kfold, best_history, training_time, last_model_name
@@ -142,7 +142,7 @@ def ensambleStartTraining():
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'validation'], loc='upper left')
-    #plt.show()
+    plt.show()
 
 def ensambleEvaluate():
 

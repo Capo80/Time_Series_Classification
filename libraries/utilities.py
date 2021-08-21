@@ -88,7 +88,7 @@ def getRandomTestTrain(percTest=0.3,seed=parameters.SEED):
         train_label[sample] = train_l[sample]
 
     # shuffle training set
-    train, train_label = sklearn.utils.shuffle(train, train_label)
+    train, train_label = sklearn.utils.shuffle(train, train_label, random_state=parameters.SEED)
 
     #randomly remove percTest of train for test
     for i in range(0, testSamples):
