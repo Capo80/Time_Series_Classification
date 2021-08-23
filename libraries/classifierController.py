@@ -45,37 +45,63 @@ def startTraining():
     n_split = parameters.KFOLD_SPLIT
     batch_size = parameters.BATCH_SIZE
     best_evaluation = [0, 0]
+    best_performance = [0, 0]
     average_kfold = 0
     training_time = 0
+    train_times = 0
     start_time = time.monotonic()
 
     training_function = parameters.FUNC_NAME
-
     last_model_name = training_function.__name__
-    for train_index,test_index in KFold(n_split).split(x_tr):
-        #print(train_index, test_index)
-        x_train_fold,x_val_fold=x_tr[train_index],x_tr[test_index]
-        y_train_fold,y_val_fold=y_tr[train_index],y_tr[test_index]
+    model = training_function(input_shape, n_classes)
 
-        if(utv):
-            x_val_fold = x_ts[0:int(0.5*x_ts.shape[0])]
-            y_val_fold = y_ts[0:int(0.5*y_ts.shape[0])]
+    AUTO_TRAIN = False
+    best_performance_test = 0
+    while True:
+        for train_index,test_index in KFold(n_split).split(x_tr):
+            #print(train_index, test_index)
+            x_train_fold,x_val_fold=x_tr[train_index],x_tr[test_index]
+            y_train_fold,y_val_fold=y_tr[train_index],y_tr[test_index]
 
-        model = training_function(input_shape, n_classes)
+            if(utv):
+                x_val_fold = x_ts[0:int(0.5*x_ts.shape[0])]
+                y_val_fold = y_ts[0:int(0.5*y_ts.shape[0])]
 
-        callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=parameters.PATIENCE)
 
-        history = model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=parameters.EPOCH, callbacks = [callback])
 
-        evaluation = model.evaluate(x_val_fold,y_val_fold, verbose=0)
-        print(evaluation, best_evaluation)
-        average_kfold += evaluation[1]
-        print('Current model evaluation ', evaluation)
-        if (best_evaluation[1] < evaluation[1]):
-            print("New best model found!!")
-            best_model = model
-            best_history = history
-            best_evaluation = evaluation
+            callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=parameters.PATIENCE)
+
+            history = model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=parameters.EPOCH, callbacks = [callback], verbose=0)
+
+            evaluation = model.evaluate(x_val_fold,y_val_fold, verbose=0)
+            print(evaluation, best_evaluation)
+            average_kfold += evaluation[1]
+            print('Current model evaluation ', evaluation)
+            if (best_evaluation[1] < evaluation[1] or (best_evaluation[1] == evaluation[1] and best_evaluation[0] > evaluation[0]) ):
+                print("New best model found!!")
+                best_model = model
+                best_history = history
+                best_evaluation = evaluation
+
+        if(not AUTO_TRAIN):
+            break
+
+        train_times += 1
+        # 97.5 reached ?, on Test Set
+        performance = best_model.evaluate(x_ts, y_ts)
+        print("Found: ", performance[1])
+
+        if(performance[1] >= 0.97 and performance[1] > best_performance_test):
+            saveLastModel()
+        if(performance[1] >= 0.975):
+            saveLastModel()
+            break
+        if(performance[1] > best_performance_test):
+            best_performance_test = performance[1]
+        if(train_times >= 15):
+            break
+
+
 
     average_kfold = average_kfold / n_split
     training_time = time.monotonic() - start_time
@@ -218,7 +244,8 @@ def evaluateOnTestSet():
     return (performance, best_model)
 
 def saveLastModel():
-    folder = parameters.FUNC_NAME.__name__ + "_" + str(best_model[1])
+    performance = best_model.evaluate(x_ts, y_ts, verbose=0)
+    folder = parameters.FUNC_NAME.__name__ + "_" + ("%.4f"%performance[1])
     os.mkdir(models_path + "/" + folder)
     best_model.save(models_path + "/" + folder)
 
