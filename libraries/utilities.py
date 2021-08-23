@@ -43,20 +43,6 @@ def setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.3, random=1,
         print("Adjusting data")
         np.around(x_tr, decimals=6)
 
-        """
-        for i in range(0, x_tr.shape[0]):
-            for j in range(0, x_tr.shape[1]):
-                for k in range(0, x_tr.shape[2]):
-                    # if using relu, negative input must be handled
-                    x_tr[i][j][k] = float("%.6f"%x_tr[i][j][k])
-
-        for i in range(0, x_ts.shape[0]):
-            for j in range(0, x_ts.shape[1]):
-                for k in range(0, x_ts.shape[2]):
-                    # if using relu, negative input must be handled
-                    x_ts[i][j][k] = float("%.6f"%x_ts[i][j][k])
-        """
-
 
     # one hot encoding
     y_tr = tf.keras.utils.to_categorical(y_tr, num_classes=n_classes)
@@ -82,6 +68,26 @@ def hasNoise(data):
             currNoise+=1
             continue
     return False
+
+# used if paramters.STRATIFIED is True
+def getSamplesPerClasses(dataset, labels):
+    # NB: labels has not to be one hot encoded !
+    samples = [None]*8
+    s_labels = [None]*8
+    for i in range(0, dataset.shape[0]):
+        sample = dataset[i]
+        cls = labels[i]
+        if(not hasNoise(sample)):
+            try:
+                if(samples[int(cls)-1] == None):
+                    samples[int(cls)-1] = sample
+                    s_labels[int(cls)-1] = cls
+            except:
+                pass
+
+    # eg: sample[0] is a rapresentative sample of movement 1
+    return samples, s_labels
+
 
 def getRandomTestTrain(percTest=0.3,seed=parameters.SEED):
 
@@ -109,6 +115,47 @@ def getRandomTestTrain(percTest=0.3,seed=parameters.SEED):
             for k in range(0, len(axis)):
                 train[sample][time][k] = (axis[k])[sample][time]
         train_label[sample] = train_l[sample]
+
+    # are classes homogeneous ?
+    if(parameters.STRATIFIED):
+        samples_s, s_labels = getSamplesPerClasses(train, train_label)
+        num_diff_class = [0]*8
+        # counting how many samples per class
+        for i in range(0, train.shape[0]):
+            num_diff_class[int(train_label[i])-1] += 1
+
+        print("Different classes: ", num_diff_class)
+
+        # creating syntetic classes to fill the gaps
+        if(parameters.SYNT):
+            maxClass = max(num_diff_class)
+            if(not parameters.INCR):
+                increment = [0]*8
+            else:
+                increment = parameters.TO_INCREASE
+            # per each class
+            for i in range(0, 8):
+                while num_diff_class[i] < maxClass + increment[i]:
+                    # creating synthetic class
+                    r = random.random()
+                    syntetic = np.empty(shape=(1, train.shape[1], 3))
+
+                    for t in range(0, train.shape[1]):
+                        for a in range(0, 3):
+                            syntetic[0][t][a] = samples_s[i][t][a] + r
+
+                    # appending
+                    train = np.append(train, syntetic, axis=0)
+                    train_label = np.append(train_label, s_labels[i])
+                    num_diff_class[i] += 1
+
+        print("Post stratification, shape: ", train.shape, train_label.shape)
+        num_diff_class = [0]*8
+        # counting how many samples per class
+        for i in range(0, train.shape[0]):
+            num_diff_class[int(train_label[i])-1] += 1
+
+        print("Different classes after increase: ", num_diff_class)
 
     # shuffle training set
     train, train_label = sklearn.utils.shuffle(train, train_label, random_state=parameters.SEED)

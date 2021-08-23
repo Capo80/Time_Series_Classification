@@ -5,7 +5,12 @@ AUGMENT=50
 EPOCH=500
 SEED=123456789
 KFOLD_SPLIT = 5
-PATIENCE = 15
+PATIENCE = 10
+STRATIFIED = True
+SYNT = True
+INCR = True
+TO_INCREASE = [0, 0, 0, 0, 0, 0, 0, 0]
+
 # good ones
 FUNC_NAME = cc.simple_mlp
 #FUNC_NAME = cc.eight
