@@ -7,17 +7,25 @@ from libraries.parameters import *
 if __name__ == "__main__":
 
     while True:
+        print("|----------------DATA OPS----------------------")
         print("1) Setup dataset")
-        print("2) Setup dataset (randomize test selection)")
+        print("2) Setup dataset (with shuffle)")
+        print("-----------------TRAIN OPS---------------------")
         print("3) Start Training")
-        print("4) Load TestSet from file")
-        print("5) Evaluate model on test set")
-        print("6) Start Ensamble Training")
-        print("7) Evaluate Ensable model on test set")
-        print("8) Save Model to file")
-        print("9) Load Best Model")
-        print("10) Save Ensamble")
-        print("11) Exit")
+        print("4) Start Ensamble Training")
+        print("-----------------EVAL OPS----------------------")
+        print("5) Evaluate Ensable model on test set")
+        print("6) Evaluate Model on test set")
+        print("-----------------LOAD OPS----------------------")
+        print("7) Load TestSet from file")
+        print("8) Load Best Model")
+        print("9) Load Best Ensemble")
+        print("-----------------SAVE OPS----------------------")
+        print("10) Save Current Model")
+        print("11) Save Ensamble")
+        print("-----------------------------------------------")
+        print("12) Exit")
+        print("|----------------------------------------------")
 
         try:
             choice = int(input("Your choice: "))
@@ -39,11 +47,11 @@ if __name__ == "__main__":
                 libraries.classifierController.startTraining()
             except Exception as e:
                 traceback.print_exc()
-        elif(choice == 4):
+        elif(choice == 7):
             libraries.classifierController.loadTestSetFromFile()
-        elif(choice == 5):
-            libraries.classifierController.evaluateOnTestSet()
         elif(choice == 6):
+            libraries.classifierController.evaluateOnTestSet()
+        elif(choice == 4):
             try:
                 # reloading classifier in case of fast modifications
                 reload(libraries.classifiers)
@@ -51,15 +59,17 @@ if __name__ == "__main__":
                 libraries.classifierController.ensambleStartTraining()
             except Exception as e:
                 traceback.print_exc()
-        elif(choice == 7):
+        elif(choice == 5):
             libraries.classifierController.ensambleEvaluate()
-        elif(choice == 8):
+        elif(choice == 10):
             libraries.classifierController.saveLastModel()
+        elif(choice == 8):
+            libraries.classifierController.loadBestModel()
         elif(choice == 9):
             libraries.classifierController.loadEnsamble()
-        elif(choice == 10):
-            libraries.classifierController.saveEnsamble()
         elif(choice == 11):
+            libraries.classifierController.saveEnsamble()
+        elif(choice == 12):
             break
         else:
             print("What ?")

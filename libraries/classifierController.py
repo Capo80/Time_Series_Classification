@@ -44,12 +44,11 @@ def startTraining():
     # KFold for model performances evaluation with best model
     n_split = parameters.KFOLD_SPLIT
     batch_size = parameters.BATCH_SIZE
-    best_evaluation = [1000, 0]
+    best_evaluation = [0, 0]
     average_kfold = 0
     training_time = 0
     start_time = time.monotonic()
 
-    #print(parameters.BATCH_SIZE)
     training_function = parameters.FUNC_NAME
 
     last_model_name = training_function.__name__
@@ -66,14 +65,14 @@ def startTraining():
 
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=parameters.PATIENCE)
 
-        history = model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=parameters.EPOCH, callbacks = [callback], verbose=0)
+        history = model.fit(x_train_fold, y_train_fold, batch_size=batch_size, validation_data=(x_val_fold, y_val_fold), epochs=parameters.EPOCH, callbacks = [callback])
 
         evaluation = model.evaluate(x_val_fold,y_val_fold, verbose=0)
-        #print(evaluation, best_evaluation)
+        print(evaluation, best_evaluation)
         average_kfold += evaluation[1]
         print('Current model evaluation ', evaluation)
-        if (best_evaluation[0] > evaluation[0]):
-            #print("New best model found!!")
+        if (best_evaluation[1] < evaluation[1]):
+            print("New best model found!!")
             best_model = model
             best_history = history
             best_evaluation = evaluation
@@ -110,6 +109,7 @@ def ensambleStartTraining():
 
     last_model_name = training_function.__name__
     n_models = 5
+    model = training_function(input_shape, n_classes)
     for ind in range(0, n_models):
         ens_size = int(x_tr.shape[0]/n_classes)
         ens_dataset_x = x_tr[ind * ens_size: (ind+1) * ens_size]
@@ -120,8 +120,6 @@ def ensambleStartTraining():
         ens_train_y = ens_dataset_y[val_size:]
         ens_val_x = ens_dataset_x[:val_size]
         ens_val_y = ens_dataset_y[:val_size]
-
-        model = training_function(input_shape, n_classes)
 
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=parameters.PATIENCE)
 
@@ -194,12 +192,39 @@ def evaluateOnTestSet():
     #save results on file
     write_line_to_csv("results.csv", last_model_name, datetime.datetime.now(), training_time, average_kfold, performance[1], parameters.AUGMENT, parameters.EPOCH, parameters.BATCH_SIZE, parameters.SEED, parameters.KFOLD_SPLIT, parameters.PATIENCE)
 
+    analyzeWrong = True
+    if(analyzeWrong):
+        try:
+            wrong_predictions = []
+            prediction = np.round(best_model.predict(x_ts))
+            for i in range(0, y_ts.shape[0]):
+                if((y_ts[i] != prediction[i]).any()):
+                    wrong_predictions.append(i)
+            print("Wrong: ", len(wrong_predictions))
+        except Exception as e:
+            print(e)
+            pass
+
+        cnt = 0
+        ww = [0,0,0,0,0,0,0,0]
+        for indx in wrong_predictions:
+            for i in range(0, 8):
+                if(int(y_ts[indx][i]) == 1) :
+                    ww[i] += 1
+            if(hasNoise(x_ts[indx])):
+                cnt += 1
+        print("Total wrong: ", len(wrong_predictions), " noised ones: ", cnt, ww)
+
     return (performance, best_model)
 
 def saveLastModel():
-    folder = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
+    folder = parameters.FUNC_NAME.__name__ + "_" + str(best_model[1])
     os.mkdir(models_path + "/" + folder)
     best_model.save(models_path + "/" + folder)
+
+def loadBestModel():
+    global best_model
+    best_model = tf.keras.models.load_model(best_model_path)
 
 def saveEnsamble():
     folder = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))

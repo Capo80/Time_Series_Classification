@@ -1,13 +1,14 @@
 import libraries.classifiers as cc
 
 BATCH_SIZE=100
-AUGMENT=14
-EPOCH=100
-SEED=42
+AUGMENT=30
+EPOCH=150
+SEED=123456789
 KFOLD_SPLIT = 5
-PATIENCE = 10
+PATIENCE = 15
 # good ones
 FUNC_NAME = cc.simple_mlp
+#FUNC_NAME = cc.eight
 #FUNC_NAME = cc.simple_dnn
 #FUNC_NAME = cc.super_simple_mlp
 

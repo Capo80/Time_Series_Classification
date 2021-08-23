@@ -1,6 +1,5 @@
 import tensorflow as tf
 
-
 # TODO tune starting momentum & learning ratewith GridSearchCV
 
 # the most promising
@@ -89,6 +88,32 @@ def shallow_cnn2(input_shape, n_classes):
 	opt = tf.keras.optimizers.Adam()
 	model.compile(optimizer=opt, loss="categorical_crossentropy", metrics=['accuracy'])
 
+	return model
+
+def eight(input_shape, n_classes):
+
+	model = tf.keras.models.Sequential()
+	model.add(tf.keras.layers.Flatten(input_shape=input_shape))
+	model.add(tf.keras.layers.Dense(units=50, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=50, activation='relu'))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dense(units=50, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=50, activation='relu'))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dense(units=50, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=50, activation='relu'))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dense(units=50, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=50, activation='relu'))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dense(units=50, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=50, activation='relu'))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dense(units=50, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=50, activation='relu'))
+	model.add(tf.keras.layers.BatchNormalization())
+	model.add(tf.keras.layers.Dense(units=n_classes, activation='softmax'))
+	model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 	return model
 
 

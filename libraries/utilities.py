@@ -20,7 +20,7 @@ def write_line_to_csv(filename, *kargs):
         row = [str(i) for i in kargs]
         spamwriter.writerow(row)
 
-def setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.3, random=0, seed=0, approx=1):
+def setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.3, random=1, seed=parameters.SEED, approx=1):
     global x_tr, y_tr, x_ts, y_ts, input_shape
 
     # retreiving test and training set
@@ -41,6 +41,9 @@ def setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.3, random=0,
     if (approx):
         # adjusting data, using only 6 digits after 0
         print("Adjusting data")
+        np.around(x_tr, decimals=6)
+
+        """
         for i in range(0, x_tr.shape[0]):
             for j in range(0, x_tr.shape[1]):
                 for k in range(0, x_tr.shape[2]):
@@ -52,6 +55,7 @@ def setUp(dataAugumentationRatio=0, infraTimeAcc=False, infraPerc=0.3, random=0,
                 for k in range(0, x_ts.shape[2]):
                     # if using relu, negative input must be handled
                     x_ts[i][j][k] = float("%.6f"%x_ts[i][j][k])
+        """
 
 
     # one hot encoding
@@ -122,9 +126,6 @@ def getRandomTestTrain(percTest=0.3,seed=parameters.SEED):
     trainNoiseCancPerc = 1
     noiseDeleted = 0
     totNoise = 0
-
-    # TODO: 0.5-; 1-; augument no noised+-; augument no noised + 0.5;
-
     if(noTrainNoise):
         print("Removing noise from training set")
         for sample in range(0, train.shape[0]):
@@ -140,7 +141,7 @@ def getRandomTestTrain(percTest=0.3,seed=parameters.SEED):
                     train_label = np.delete(train_label, sample, 0)
                     noiseDeleted+=1
         print("Total sample with noise deleted: ", noiseDeleted, "(on {} total noised sample)".format(totNoise))
-        
+
     print("Train shape: ", train.shape, "Train label shape: ", train_label.shape)
     print("Test shape: ", test.shape, "Test label shape: ", test_label.shape)
 
