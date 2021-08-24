@@ -135,8 +135,10 @@ def ensambleStartTraining():
 
     last_model_name = training_function.__name__
     n_models = 5
-    model = training_function(input_shape, n_classes)
     for ind in range(0, n_models):
+
+        model = training_function(input_shape, n_classes)
+
         ens_size = int(x_tr.shape[0]/n_classes)
         ens_dataset_x = x_tr[ind * ens_size: (ind+1) * ens_size]
         ens_dataset_y = y_tr[ind * ens_size: (ind+1) * ens_size]
@@ -149,7 +151,7 @@ def ensambleStartTraining():
 
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', restore_best_weights=True, patience=parameters.PATIENCE)
 
-        history = model.fit(ens_train_x, ens_train_y, batch_size=batch_size, validation_data=(ens_val_x, ens_val_y), epochs=parameters.EPOCH, callbacks = [callback], verbose=1)
+        history = model.fit(ens_train_x, ens_train_y, batch_size=batch_size, validation_data=(ens_val_x, ens_val_y), epochs=parameters.EPOCH, callbacks = [callback], verbose=0)
 
         evaluation = model.evaluate(ens_val_x,ens_val_y, verbose=0)
 
@@ -166,7 +168,7 @@ def ensambleStartTraining():
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'validation'], loc='upper left')
-    plt.show()
+    #plt.show()
 
 def ensambleEvaluate():
 
@@ -187,6 +189,83 @@ def ensambleEvaluate():
 
             result = tf.keras.utils.to_categorical(result, num_classes=n_classes)
 
+            analyzeWrong = False
+            if(analyzeWrong):
+                try:
+                    wrong_predictions = []
+                    for i in range(0, y_ts.shape[0]):
+                        if((y_ts[i] != result[i]).any()):
+                            wrong_predictions.append(i)
+                    print("Wrong: ", len(wrong_predictions))
+                except Exception as e:
+                    print(e)
+                    pass
+
+                cnt = 0
+                ww = [0,0,0,0,0,0,0,0]
+                for indx in wrong_predictions:
+                    for i in range(0, 8):
+                        if(int(y_ts[indx][i]) == 1) :
+                            ww[i] += 1
+                    if(hasNoise(x_ts[indx])):
+                        cnt += 1
+                print("Total wrong: ", len(wrong_predictions), " noised ones: ", cnt, ww)
+
+            curr_evaluation = accuracy_score(y_ts, result)
+            print("Ensamble accuracy: ",curr_evaluation )
+
+            if curr_evaluation > best_evaluation:
+                best_evaluation = curr_evaluation
+                best_ensamble = comb
+    print("Best accuracy: ", best_evaluation)
+
+    #save results on file
+    write_line_to_csv("results.csv", last_model_name, datetime.datetime.now(), training_time, "ensamble", best_evaluation, parameters.AUGMENT, parameters.EPOCH, parameters.BATCH_SIZE, parameters.SEED, parameters.KFOLD_SPLIT, parameters.PATIENCE)
+
+
+def ensambleEvaluateMax():
+
+    global best_ensamble
+    best_evaluation = 0
+
+    for model in ensamble_models:
+        print("Single model prediction: ", model.evaluate(x_ts, y_ts, verbose=0))
+
+    for i in range(2, len(ensamble_models)+1):
+        for comb in combinations(ensamble_models, i):
+            yhats = [model.predict(x_ts) for model in comb]
+            yhats = np.array(yhats)
+
+            best_pred = np.argmax(np.max(yhats, axis=2), axis=0)
+            
+            # argmax across classes
+            result = np.array([np.argmax(yhats[best_pred[i]][i], axis=0) for i in range(0, len(best_pred))])
+
+            result = tf.keras.utils.to_categorical(result, num_classes=n_classes)
+
+            analyzeWrong = False
+            if(analyzeWrong):
+                try:
+                    wrong_predictions = []
+                    for i in range(0, y_ts.shape[0]):
+                        if((y_ts[i] != result[i]).any()):
+                            wrong_predictions.append(i)
+                    print("Wrong: ", len(wrong_predictions))
+                except Exception as e:
+                    print(e)
+                    pass
+
+                cnt = 0
+                ww = [0,0,0,0,0,0,0,0]
+                for indx in wrong_predictions:
+                    for i in range(0, 8):
+                        if(int(y_ts[indx][i]) == 1) :
+                            ww[i] += 1
+                    if(hasNoise(x_ts[indx])):
+                        cnt += 1
+                print("Total wrong: ", len(wrong_predictions), " noised ones: ", cnt, ww)
+
+            #print(result, y_ts)
             curr_evaluation = accuracy_score(y_ts, result)
             print("Ensamble accuracy: ",curr_evaluation )
 
@@ -265,7 +344,61 @@ def loadEnsamble():
 
     ensamble_models = []
 
-    ensamble_models.append(tf.keras.models.load_model("./saved_models/ensamble_simple_mlp_9793/model0"))
-    ensamble_models.append(tf.keras.models.load_model("./saved_models/ensamble_simple_mlp_9793/model1"))
+    ensamble_dir = "ensamble_simple_max_9813"
+    for c in range(0, 4):
+        ensamble_models.append(tf.keras.models.load_model("./saved_models/" + ensamble_dir + "/model" + str(c)))
 
+    print(ensamble_models)
     print("Best model loaded !")
+
+    best_evaluation = 0
+
+    for model in ensamble_models:
+        print("Single model prediction: ", model.evaluate(x_ts, y_ts, verbose=0))
+
+    for i in range(2, len(ensamble_models)+1):
+        for comb in combinations(ensamble_models, i):
+            yhats = [model.predict(x_ts) for model in comb]
+            yhats = np.array(yhats)
+
+            best_pred = np.argmax(np.max(yhats, axis=2), axis=0)
+            
+            # argmax across classes
+            result = np.array([np.argmax(yhats[best_pred[i]][i], axis=0) for i in range(0, len(best_pred))])
+
+            result = tf.keras.utils.to_categorical(result, num_classes=n_classes)
+
+            analyzeWrong = False
+            if(analyzeWrong):
+                try:
+                    wrong_predictions = []
+                    for i in range(0, y_ts.shape[0]):
+                        if((y_ts[i] != result[i]).any()):
+                            wrong_predictions.append(i)
+                    print("Wrong: ", len(wrong_predictions))
+                except Exception as e:
+                    print(e)
+                    pass
+
+                cnt = 0
+                ww = [0,0,0,0,0,0,0,0]
+                for indx in wrong_predictions:
+                    for i in range(0, 8):
+                        if(int(y_ts[indx][i]) == 1) :
+                            ww[i] += 1
+                    if(hasNoise(x_ts[indx])):
+                        cnt += 1
+                print("Total wrong: ", len(wrong_predictions), " noised ones: ", cnt, ww)
+
+            #print(result, y_ts)
+            curr_evaluation = accuracy_score(y_ts, result)
+            print("Ensamble accuracy: ",curr_evaluation )
+
+            if curr_evaluation > best_evaluation:
+                best_evaluation = curr_evaluation
+                best_ensamble = comb
+    print("Best accuracy: ", best_evaluation)
+
+    #save results on file
+    write_line_to_csv("results.csv", last_model_name, datetime.datetime.now(), training_time, "ensamble", best_evaluation, parameters.AUGMENT, parameters.EPOCH, parameters.BATCH_SIZE, parameters.SEED, parameters.KFOLD_SPLIT, parameters.PATIENCE)
+

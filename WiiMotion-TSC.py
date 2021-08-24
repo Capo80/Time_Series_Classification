@@ -16,15 +16,16 @@ if __name__ == "__main__":
         print("-----------------EVAL OPS----------------------")
         print("5) Evaluate Ensable model on test set")
         print("6) Evaluate Model on test set")
+        print("7) Evaluate Ensamble Max Model on test set")
         print("-----------------LOAD OPS----------------------")
-        print("7) Load TestSet from file")
-        print("8) Load Best Model")
-        print("9) Load Best Ensemble")
+        print("8) Load TestSet from file")
+        print("9) Load Best Model")
+        print("10) Load Best Ensemble")
         print("-----------------SAVE OPS----------------------")
-        print("10) Save Current Model")
-        print("11) Save Ensamble")
+        print("11) Save Current Model")
+        print("12) Save Ensamble")
         print("-----------------------------------------------")
-        print("12) Exit")
+        print("13) Exit")
         print("|----------------------------------------------")
 
         try:
@@ -47,7 +48,7 @@ if __name__ == "__main__":
                 libraries.classifierController.startTraining()
             except Exception as e:
                 traceback.print_exc()
-        elif(choice == 7):
+        elif(choice == 8):
             libraries.classifierController.loadTestSetFromFile()
         elif(choice == 6):
             libraries.classifierController.evaluateOnTestSet()
@@ -61,15 +62,17 @@ if __name__ == "__main__":
                 traceback.print_exc()
         elif(choice == 5):
             libraries.classifierController.ensambleEvaluate()
-        elif(choice == 10):
-            libraries.classifierController.saveLastModel()
-        elif(choice == 8):
-            libraries.classifierController.loadBestModel()
-        elif(choice == 9):
-            libraries.classifierController.loadEnsamble()
+        elif(choice == 7):
+            libraries.classifierController.ensambleEvaluateMax()
         elif(choice == 11):
-            libraries.classifierController.saveEnsamble()
+            libraries.classifierController.saveLastModel()
+        elif(choice == 9):
+            libraries.classifierController.loadBestModel()
+        elif(choice == 10):
+            libraries.classifierController.loadEnsamble()
         elif(choice == 12):
+            libraries.classifierController.saveEnsamble()
+        elif(choice == 13):
             break
         else:
             print("What ?")
