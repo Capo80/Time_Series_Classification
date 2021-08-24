@@ -351,6 +351,8 @@ def loadEnsamble():
     print(ensamble_models)
     print("Best model loaded !")
 
+    libraries.classifierController.setUp(dataAugumentationRatio=parameters.AUGMENT, infraTimeAcc=False, infraPerc=0.1, random=1, seed=parameters.SEED, approx=0)
+        
     best_evaluation = 0
 
     for model in ensamble_models:
