@@ -55,7 +55,7 @@ def startTraining():
     last_model_name = training_function.__name__
     model = training_function(input_shape, n_classes)
 
-    AUTO_TRAIN = False
+    AUTO_TRAIN = True
     best_performance_test = 0
     while True:
         for train_index,test_index in KFold(n_split).split(x_tr):
@@ -92,13 +92,13 @@ def startTraining():
         print("Found: ", performance[1])
 
         if(performance[1] >= 0.97 and performance[1] > best_performance_test):
-            saveLastModel()
-        if(performance[1] >= 0.975):
-            saveLastModel()
-            break
+            try:
+                saveLastModel()
+            except:
+                pass
         if(performance[1] > best_performance_test):
             best_performance_test = performance[1]
-        if(train_times >= 15):
+        if(train_times >= 5):
             break
 
 
@@ -245,7 +245,7 @@ def evaluateOnTestSet():
 
 def saveLastModel():
     performance = best_model.evaluate(x_ts, y_ts, verbose=0)
-    folder = parameters.FUNC_NAME.__name__ + "_" + ("%.4f"%performance[1])
+    folder = parameters.FUNC_NAME.__name__ + "_" + ("%.4f"%performance[1]+ "_"+("%.3f"%random.random()))
     os.mkdir(models_path + "/" + folder)
     best_model.save(models_path + "/" + folder)
 
