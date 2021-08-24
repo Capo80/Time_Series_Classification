@@ -55,7 +55,7 @@ def startTraining():
     last_model_name = training_function.__name__
     model = training_function(input_shape, n_classes)
 
-    AUTO_TRAIN = False
+    AUTO_TRAIN = True
     best_performance_test = 0
     while True:
         for train_index,test_index in KFold(n_split).split(x_tr):
@@ -92,13 +92,13 @@ def startTraining():
         print("Found: ", performance[1])
 
         if(performance[1] >= 0.97 and performance[1] > best_performance_test):
-            saveLastModel()
-        if(performance[1] >= 0.975):
-            saveLastModel()
-            break
+            try:
+                saveLastModel()
+            except:
+                pass
         if(performance[1] > best_performance_test):
             best_performance_test = performance[1]
-        if(train_times >= 15):
+        if(train_times >= 5):
             break
 
 
@@ -172,7 +172,7 @@ def ensambleStartTraining():
 
 def ensambleEvaluate():
 
-    global best_ensamble
+    global best_ensamble, x_ts, y_ts
     best_evaluation = 0
 
     for model in ensamble_models:
@@ -212,12 +212,11 @@ def ensambleEvaluate():
                 print("Total wrong: ", len(wrong_predictions), " noised ones: ", cnt, ww)
 
             curr_evaluation = accuracy_score(y_ts, result)
-            print("Ensamble accuracy: ",curr_evaluation )
 
             if curr_evaluation > best_evaluation:
                 best_evaluation = curr_evaluation
-                best_ensamble = comb
-    print("Best accuracy: ", best_evaluation)
+                best_ensamble = ensamble_models
+    print("Ensamble accuracy: ", best_evaluation)
 
     #save results on file
     write_line_to_csv("results.csv", last_model_name, datetime.datetime.now(), training_time, "ensamble", best_evaluation, parameters.AUGMENT, parameters.EPOCH, parameters.BATCH_SIZE, parameters.SEED, parameters.KFOLD_SPLIT, parameters.PATIENCE)
@@ -225,7 +224,7 @@ def ensambleEvaluate():
 
 def ensambleEvaluateMax():
 
-    global best_ensamble
+    global best_ensamble, x_ts, y_ts
     best_evaluation = 0
 
     for model in ensamble_models:
@@ -267,12 +266,11 @@ def ensambleEvaluateMax():
 
             #print(result, y_ts)
             curr_evaluation = accuracy_score(y_ts, result)
-            print("Ensamble accuracy: ",curr_evaluation )
-
+            
             if curr_evaluation > best_evaluation:
                 best_evaluation = curr_evaluation
-                best_ensamble = comb
-    print("Best accuracy: ", best_evaluation)
+                best_ensamble = ensamble_models
+    print("Ensamble accuracy: ", best_evaluation)
 
     #save results on file
     write_line_to_csv("results.csv", last_model_name, datetime.datetime.now(), training_time, "ensamble", best_evaluation, parameters.AUGMENT, parameters.EPOCH, parameters.BATCH_SIZE, parameters.SEED, parameters.KFOLD_SPLIT, parameters.PATIENCE)
@@ -280,6 +278,8 @@ def ensambleEvaluateMax():
 
 
 def evaluateOnTestSet():
+
+    global x_ts, y_ts
 
     #training time
     print("Training time: ", training_time)
@@ -324,7 +324,7 @@ def evaluateOnTestSet():
 
 def saveLastModel():
     performance = best_model.evaluate(x_ts, y_ts, verbose=0)
-    folder = parameters.FUNC_NAME.__name__ + "_" + ("%.4f"%performance[1])
+    folder = parameters.FUNC_NAME.__name__ + "_" + ("%.4f"%performance[1]+ "_"+("%.3f"%random.random()))
     os.mkdir(models_path + "/" + folder)
     best_model.save(models_path + "/" + folder)
 
@@ -344,63 +344,9 @@ def loadEnsamble():
 
     ensamble_models = []
 
-    ensamble_dir = "ensamble_simple_max_9813"
-    for c in range(0, 4):
-        ensamble_models.append(tf.keras.models.load_model("./saved_models/" + ensamble_dir + "/model" + str(c)))
+    for c in range(0, 3):
+        ensamble_models.append(tf.keras.models.load_model("./saved_models/" + best_ensamble_dir + "/model" + str(c)))
 
     print(ensamble_models)
     print("Best model loaded !")
-
-    libraries.classifierController.setUp(dataAugumentationRatio=parameters.AUGMENT, infraTimeAcc=False, infraPerc=0.1, random=1, seed=parameters.SEED, approx=0)
-        
-    best_evaluation = 0
-
-    for model in ensamble_models:
-        print("Single model prediction: ", model.evaluate(x_ts, y_ts, verbose=0))
-
-    for i in range(2, len(ensamble_models)+1):
-        for comb in combinations(ensamble_models, i):
-            yhats = [model.predict(x_ts) for model in comb]
-            yhats = np.array(yhats)
-
-            best_pred = np.argmax(np.max(yhats, axis=2), axis=0)
-            
-            # argmax across classes
-            result = np.array([np.argmax(yhats[best_pred[i]][i], axis=0) for i in range(0, len(best_pred))])
-
-            result = tf.keras.utils.to_categorical(result, num_classes=n_classes)
-
-            analyzeWrong = False
-            if(analyzeWrong):
-                try:
-                    wrong_predictions = []
-                    for i in range(0, y_ts.shape[0]):
-                        if((y_ts[i] != result[i]).any()):
-                            wrong_predictions.append(i)
-                    print("Wrong: ", len(wrong_predictions))
-                except Exception as e:
-                    print(e)
-                    pass
-
-                cnt = 0
-                ww = [0,0,0,0,0,0,0,0]
-                for indx in wrong_predictions:
-                    for i in range(0, 8):
-                        if(int(y_ts[indx][i]) == 1) :
-                            ww[i] += 1
-                    if(hasNoise(x_ts[indx])):
-                        cnt += 1
-                print("Total wrong: ", len(wrong_predictions), " noised ones: ", cnt, ww)
-
-            #print(result, y_ts)
-            curr_evaluation = accuracy_score(y_ts, result)
-            print("Ensamble accuracy: ",curr_evaluation )
-
-            if curr_evaluation > best_evaluation:
-                best_evaluation = curr_evaluation
-                best_ensamble = comb
-    print("Best accuracy: ", best_evaluation)
-
-    #save results on file
-    write_line_to_csv("results.csv", last_model_name, datetime.datetime.now(), training_time, "ensamble", best_evaluation, parameters.AUGMENT, parameters.EPOCH, parameters.BATCH_SIZE, parameters.SEED, parameters.KFOLD_SPLIT, parameters.PATIENCE)
 

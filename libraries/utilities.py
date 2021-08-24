@@ -194,7 +194,7 @@ def getRandomTestTrain(percTest=0.3,seed=parameters.SEED):
     print("Test shape: ", test.shape, "Test label shape: ", test_label.shape)
 
     # USED ONLY TO DEBUG Evaluation Procedure made by the teacher, set to False
-    saveTestSet = False
+    saveTestSet = True
     # writing test set into a file
     if(saveTestSet):
         np.savetxt(test_x_filename, [ [test[i][j][0] for j in range(0,test.shape[1])] for i in range(0, test.shape[0]) ], delimiter=",", fmt="%s")

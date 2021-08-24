@@ -6,9 +6,9 @@ import tensorflow as tf
 def simple_mlp_experimental2(input_shape, n_classes):
 	model = tf.keras.models.Sequential()
 	model.add(tf.keras.layers.Flatten(input_shape=input_shape))
-	model.add(tf.keras.layers.Dense(units=200, activation='relu'))
-	model.add(tf.keras.layers.Dense(units=100, activation='relu'))
-	model.add(tf.keras.layers.Dense(units=50, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=300, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=150, activation='relu'))
+	model.add(tf.keras.layers.Dense(units=75, activation='relu'))
 	model.add(tf.keras.layers.Dense(units=n_classes, activation='softmax'))
 	opt = tf.keras.optimizers.Adam()
 	model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
